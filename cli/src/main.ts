@@ -1,8 +1,15 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { CommandFactory } from "nest-commander";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+  console.log(process.argv);
+  await CommandFactory.run(AppModule, [
+    "warn",
+    "error",
+    "debug",
+    "verbose",
+    "log",
+  ]);
 }
+
 bootstrap();
