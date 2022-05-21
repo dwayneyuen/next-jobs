@@ -1,6 +1,6 @@
 {
   "name": "@dwayneyuen/next-jobs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "dist/index.js",
   "exports": "./dist/index.js",
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@types/node": "^17.0.35",
-    "bullmq": "^1.82.2",
+    "bullmq": "^1.83.0",
     "next": "^12.1.6",
     "winston": "^3.7.2"
   },
