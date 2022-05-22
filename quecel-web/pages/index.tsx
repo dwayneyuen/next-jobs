@@ -2,6 +2,8 @@ import { Fragment } from "react";
 import { Popover, Transition } from "@headlessui/react";
 import { MenuIcon, XIcon } from "@heroicons/react/outline";
 import { useRouter } from "next/router";
+import Link from "next/link";
+import { useUser } from "@auth0/nextjs-auth0";
 
 const navigation = [
   { name: "Product", href: "#" },
@@ -11,7 +13,7 @@ const navigation = [
 ];
 
 export default function Example() {
-  const router = useRouter();
+  const { user } = useUser();
   return (
     <div className="bg-gray-50">
       <div className="relative overflow-hidden">
@@ -97,7 +99,7 @@ export default function Example() {
                       <span className="sr-only">Workflow</span>
                       <img
                         className="h-8 w-auto sm:h-10"
-                        src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg"
+                        src="black-logo.svg"
                         alt=""
                       />
                     </a>
@@ -120,22 +122,28 @@ export default function Example() {
                     </a>
                   ))}
                 </div>
-                <div className="hidden md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:right-0">
-                  <a
-                    href="#"
-                    className="whitespace-nowrap text-base font-medium text-gray-500 hover:text-gray-900"
-                  >
-                    Sign in
-                  </a>
-                  <button
-                    className="btn ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r bg-black bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:bg-white hover:text-black hover:border-black"
-                    onClick={async () => {
-                      await router.push("/signup");
-                    }}
-                  >
-                    Sign up
-                  </button>
-                </div>
+                {user ? (
+                  <div className="hidden md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:right-0">
+                    <Link href={"/api/auth/logout"}>
+                      <button className="btn ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r bg-black bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:bg-white hover:text-black hover:border-black">
+                        Log out
+                      </button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="hidden md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:right-0">
+                    <Link href="/api/auth/login">
+                      <button className="btn ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r bg-black bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:bg-white hover:text-black hover:border-black">
+                        Log in
+                      </button>
+                    </Link>
+                    {/*<Link href={"/signup"}>*/}
+                    {/*  <button className="btn ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r bg-black bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:bg-white hover:text-black hover:border-black">*/}
+                    {/*    Sign up*/}
+                    {/*  </button>*/}
+                    {/*</Link>*/}
+                  </div>
+                )}
               </nav>
             </div>
 
