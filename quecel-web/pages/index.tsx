@@ -1,9 +1,9 @@
 import { Fragment } from "react";
 import { Popover, Transition } from "@headlessui/react";
 import { MenuIcon, XIcon } from "@heroicons/react/outline";
-import { useRouter } from "next/router";
 import Link from "next/link";
 import { useUser } from "@auth0/nextjs-auth0";
+import BlackButton from "../components/BlackButton";
 
 const navigation = [
   { name: "Product", href: "#" },
@@ -12,7 +12,7 @@ const navigation = [
   { name: "Company", href: "#" },
 ];
 
-export default function Example() {
+export default function Index() {
   const { user } = useUser();
   return (
     <div className="bg-gray-50">
@@ -124,24 +124,11 @@ export default function Example() {
                 </div>
                 {user ? (
                   <div className="hidden md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:right-0">
-                    <Link href={"/api/auth/logout"}>
-                      <button className="btn ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r bg-black bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:bg-white hover:text-black hover:border-black">
-                        Log out
-                      </button>
-                    </Link>
+                    <BlackButton href={"/api/auth/logout"}>Log out</BlackButton>
                   </div>
                 ) : (
                   <div className="hidden md:absolute md:flex md:items-center md:justify-end md:inset-y-0 md:right-0">
-                    <Link href="/api/auth/login">
-                      <button className="btn ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r bg-black bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:bg-white hover:text-black hover:border-black">
-                        Log in
-                      </button>
-                    </Link>
-                    {/*<Link href={"/signup"}>*/}
-                    {/*  <button className="btn ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r bg-black bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:bg-white hover:text-black hover:border-black">*/}
-                    {/*    Sign up*/}
-                    {/*  </button>*/}
-                    {/*</Link>*/}
+                    <BlackButton href={"/api/auth/login"}>Log in</BlackButton>
                   </div>
                 )}
               </nav>
