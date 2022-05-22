@@ -28,16 +28,17 @@ function RepeatableJob<T>(
   schedule: string,
   callback: RepeatableJobCallbackType
 ): { start(): Promise<void> } & NextApiHandler {
+  let initialized = false;
   const jobName = __filename
     .replace(__dirname, "")
     .replace(/^\//g, "")
     .replace("///g", "-");
 
   new QueueScheduler(jobName, {
-    connection: { host: "localhost", port: 6379 }
+    connection: { host: "localhost", port: 6379 },
   });
   const queue = new Queue<RepeatableJobType>(jobName, {
-    connection: { host: "localhost", port: 6379 }
+    connection: { host: "localhost", port: 6379 },
   });
 
   const worker = new Worker<RepeatableJobType>(
@@ -65,14 +66,31 @@ function RepeatableJob<T>(
       return;
     }
 
+    if (!initialized) {
+      initialized = true;
+      logger.info(`[RepeatableJob.${jobName}] started`);
+      await queue.add(
+        jobName,
+        { callback, name: jobName },
+        { repeat: { cron: schedule } }
+      );
+    }
+
     logger.info(`[RepeatableJob.${jobName}] called manually`);
     await callback();
     res.status(200).end();
   };
 
   nextApiHandler.start = async () => {
-    logger.info(`[RepeatableJob.${jobName}] started`);
-    await queue.add(jobName, { callback, name: jobName }, { repeat: { cron: schedule } });
+    if (!initialized) {
+      initialized = true;
+      logger.info(`[RepeatableJob.${jobName}] started`);
+      await queue.add(
+        jobName,
+        { callback, name: jobName },
+        { repeat: { cron: schedule } }
+      );
+    }
   };
 
   return nextApiHandler;
