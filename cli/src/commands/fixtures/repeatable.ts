@@ -1,6 +1,6 @@
 import { RepeatableJob } from "@dwayneyuen/next-jobs";
 
-const RepeatableJobExample = RepeatableJob({ cron: "* * * * *" }, () => {
+const RepeatableJobExample = RepeatableJob("* * * * *", () => {
   console.log("");
 });
 

@@ -1,7 +1,7 @@
 import { RepeatableJob } from "@dwayneyuen/next-jobs";
 
 const foo = [
-  RepeatableJob({ cron: "* * * * *" }, () => {
+  RepeatableJob("* * * * *", () => {
     console.log("");
   }),
 ];

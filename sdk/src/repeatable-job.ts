@@ -8,7 +8,7 @@
  *
  */
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
-import { Job, Queue, QueueScheduler, RepeatOptions, Worker } from "bullmq";
+import { Job, Queue, QueueScheduler, Worker } from "bullmq";
 import { logger } from "./logger";
 
 export type RepeatableJobCallbackType = (() => Promise<void>) | (() => void);
@@ -18,8 +18,14 @@ type RepeatableJobType = {
   name: string;
 };
 
+/**
+ * TODO: Allow full RepeatOptions
+ * @param schedule
+ * @param callback
+ * @constructor
+ */
 function RepeatableJob<T>(
-  repeatOptions: RepeatOptions,
+  schedule: string,
   callback: RepeatableJobCallbackType
 ): { start(): Promise<void> } & NextApiHandler {
   const jobName = __filename
@@ -28,10 +34,10 @@ function RepeatableJob<T>(
     .replace("///g", "-");
 
   new QueueScheduler(jobName, {
-    connection: { host: "localhost", port: 6379 },
+    connection: { host: "localhost", port: 6379 }
   });
   const queue = new Queue<RepeatableJobType>(jobName, {
-    connection: { host: "localhost", port: 6379 },
+    connection: { host: "localhost", port: 6379 }
   });
 
   const worker = new Worker<RepeatableJobType>(
@@ -66,7 +72,7 @@ function RepeatableJob<T>(
 
   nextApiHandler.start = async () => {
     logger.info(`[RepeatableJob.${jobName}] started`);
-    await queue.add(jobName, { callback, name: jobName }, { ...repeatOptions });
+    await queue.add(jobName, { callback, name: jobName }, { repeat: { cron: schedule } });
   };
 
   return nextApiHandler;

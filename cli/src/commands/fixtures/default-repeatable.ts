@@ -1,5 +1,5 @@
 import { RepeatableJob } from "@dwayneyuen/next-jobs";
 
-export default RepeatableJob({ cron: "* * * * *" }, () => {
+export default RepeatableJob("* * * * *", () => {
   console.log("");
 });

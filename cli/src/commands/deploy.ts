@@ -3,11 +3,8 @@ import { Logger } from "@nestjs/common";
 import { Command, CommandRunner } from "nest-commander";
 import { glob } from "glob";
 import * as ts from "typescript";
-import { Job, Repeat, RepeatOptions } from "bullmq";
+import { RepeatOptions } from "bullmq";
 import Repeatable from "./fixtures/repeatable";
-
-const JOB_QUEUE_NAME: string = JobQueue.name;
-const REPEATABLE_JOB_NAME: string = RepeatableJob.name;
 
 /**
  * Parse the source file and detect when its default export is RepeatableJob,
@@ -23,11 +20,11 @@ export const parseFile = (
       type: "JobQueue";
     }
   | {
-      repeatOptions: RepeatOptions;
+      schedule: string;
       type: "RepeatableJob";
     } => {
   let result = null;
-  const repeatableJobDeclarations = new Set();
+  const repeatableJobDeclarations = new Map<string, string>();
   const jobQueueDeclarations = new Set();
   ts.forEachChild(sourceFile, (node) => {
     Logger.debug(`node.kind: ${node.kind}`);
@@ -40,11 +37,19 @@ export const parseFile = (
                 declaration.initializer.expression.escapedText ===
                 RepeatableJob.name
               ) {
-                // TODO(Dwayne)
-                // - extract arguments
-                // - support objects and arrays
+                Logger.debug(`declaration: ${JSON.stringify(declaration)}`);
                 if (ts.isIdentifier(declaration.name)) {
-                  repeatableJobDeclarations.add(declaration.name.escapedText);
+                  if (declaration.initializer.arguments.length > 0) {
+                    // const argument = node.expression.arguments[0];
+                    if (
+                      ts.isStringLiteral(declaration.initializer.arguments[0])
+                    ) {
+                      repeatableJobDeclarations.set(
+                        declaration.name.escapedText.toString(),
+                        declaration.initializer.arguments[0].text,
+                      );
+                    }
+                  }
                 }
               } else if (
                 declaration.initializer.expression.escapedText === JobQueue.name
@@ -62,9 +67,18 @@ export const parseFile = (
         // Default export declared inline
         if (ts.isIdentifier(node.expression.expression)) {
           if (node.expression.expression.escapedText === RepeatableJob.name) {
-            result = { type: RepeatableJob.name };
+            Logger.debug(
+              `expression: ${JSON.stringify(node.expression.expression)}`,
+            );
+            if (node.expression.arguments.length > 0) {
+              if (ts.isStringLiteral(node.expression.arguments[0])) {
+                result = {
+                  type: RepeatableJob.name,
+                  schedule: node.expression.arguments[0].text,
+                };
+              }
+            }
           } else if (node.expression.expression.escapedText === JobQueue.name) {
-            // TODO(Dwayne) extract arguments
             result = { type: JobQueue.name };
           }
         }
@@ -72,8 +86,15 @@ export const parseFile = (
         // Default export declared earlier, match escapedText to previous declaration
         if (jobQueueDeclarations.has(node.expression.escapedText)) {
           result = { type: JobQueue.name };
-        } else if (repeatableJobDeclarations.has(node.expression.escapedText)) {
-          result = { type: RepeatableJob.name };
+        } else if (
+          repeatableJobDeclarations.has(node.expression.escapedText.toString())
+        ) {
+          result = {
+            type: RepeatableJob.name,
+            schedule: repeatableJobDeclarations.get(
+              node.expression.escapedText.toString(),
+            ),
+          };
         }
       }
     }
@@ -98,10 +119,8 @@ export class DeployCommand implements CommandRunner {
         rootNames: files,
       });
       for (const file of files) {
-        Logger.debug(`job? ${file}`);
         const sourceFile = program.getSourceFile(file);
         const result = parseFile(sourceFile);
-        Logger.debug(`result: ${JSON.stringify(result)}`);
       }
     });
     glob(`${passedParams[0]}/pages/api/queues/**/*.+(ts|js)`, (err, files) => {
@@ -110,10 +129,8 @@ export class DeployCommand implements CommandRunner {
         rootNames: files,
       });
       for (const file of files) {
-        Logger.debug(`job? ${file}`);
         const sourceFile = program.getSourceFile(file);
         const result = parseFile(sourceFile);
-        Logger.debug(`result: ${JSON.stringify(result)}`);
       }
     });
     return Promise.resolve(undefined);

@@ -1,6 +1,5 @@
 import * as ts from "typescript";
 import { parseFile } from "./deploy";
-import { JobQueue, RepeatableJob } from "@dwayneyuen/next-jobs";
 
 describe("parseFile", () => {
   it("Given an empty file, when calling parseFile, then should return null", () => {
@@ -66,6 +65,9 @@ describe("parseFile", () => {
     const result = parseFile(sourceFile);
 
     expect(result.type).toEqual("RepeatableJob");
+    if (result.type === "RepeatableJob") {
+      expect(result.schedule).toEqual("* * * * *");
+    }
   });
 
   it("Given a RepeatableJob declared and later exported as default, when calling parseFile, then should return RepeatableJob", () => {
@@ -76,6 +78,9 @@ describe("parseFile", () => {
     const result = parseFile(sourceFile);
 
     expect(result.type).toEqual("RepeatableJob");
+    if (result.type === "RepeatableJob") {
+      expect(result.schedule).toEqual("* * * * *");
+    }
   });
 
   it.skip("Given a RepeatableJob exported as default from an object, when calling parseFile, then should return RepeatableJob", () => {
