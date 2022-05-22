@@ -2,6 +2,7 @@
 
 Monorepo for the next-jobs library. Contents:
 
-- cli - CLI tool for deploying next-jobs to quecel
+- cli - NestJS CLI tool for deploying next-jobs to quecel
 - sdk - Client library published to npm
-- api - API server for managing jobs
+- api - NestJS API server for managing jobs
+- quecel-web - Next.js client application
