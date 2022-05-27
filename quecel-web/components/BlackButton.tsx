@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ReactNode } from "react";
+import { MailIcon } from "@heroicons/react/solid";
 
 export default function BlackButton({
   children,

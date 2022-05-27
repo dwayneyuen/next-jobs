@@ -1,0 +1,17 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Mutation {
+  upsertUser(auth0Sub: String!, email: String!, emailVerified: Boolean!): User!
+}
+
+type Query {
+  getUser(email: String!): User
+  setUser(email: String!): User
+}
+
+type User {
+  email: String!
+  id: String!
+}

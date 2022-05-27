@@ -9,6 +9,7 @@
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "generate-graphql-schema": "ts-node scripts/generate-graphql-schema.ts",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -22,10 +23,21 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@nestjs/apollo": "^10.0.12",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
+    "@nestjs/graphql": "^10.0.12",
     "@nestjs/mapped-types": "*",
+    "@nestjs/passport": "^8.2.1",
     "@nestjs/platform-express": "^8.0.0",
+    "@prisma/client": "^3.14.0",
+    "apollo-server-express": "^3.7.0",
+    "class-validator": "^0.13.2",
+    "dotenv": "^16.0.1",
+    "graphql": "^16.5.0",
+    "jwks-rsa": "^2.1.3",
+    "passport": "^0.5.3",
+    "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0"
@@ -52,6 +64,7 @@
     "supertest": "^6.1.3",
     "ts-jest": "28.0.1",
     "ts-loader": "^9.2.3",
+    "ts-morph": "^14.0.0",
     "ts-node": "^10.0.0",
     "tsconfig-paths": "4.0.0",
     "typescript": "^4.3.5"
@@ -86,7 +99,8 @@
   },
   "homepage": "https://github.com/dwayneyuen/next-jobs-app#readme",
   "lint-staged": {
-    "*.{js,ts}": "eslint --cache --fix",
-    "*.{js,ts,md}": "prettier --write"
+    "*.{js,ts}": "eslint . --cache --fix",
+    "*.{js,ts,md}": "prettier --write",
+    "*.prisma": "prisma format"
   }
 }
