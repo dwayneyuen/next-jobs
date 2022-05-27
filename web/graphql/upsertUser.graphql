@@ -1,9 +1,0 @@
-mutation upsertUser($auth0Sub: String!, $email: String!, $emailVerified: Boolean!) {
-    upsertUser(
-        auth0Sub: $auth0Sub
-        email: $email
-        emailVerified: $emailVerified
-    ) {
-        id
-    }
-}

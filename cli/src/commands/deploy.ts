@@ -106,7 +106,7 @@ export const parseFile = (
 @Command({
   arguments: "<path>",
   name: "deploy",
-  description: "deploy application to quecel",
+  description: "deploy application",
 })
 export class DeployCommand implements CommandRunner {
   run(passedParams: string[], _options?: Record<string, any>): Promise<void> {

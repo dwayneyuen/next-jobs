@@ -1,0 +1,6 @@
+query getMe {
+    getMe {
+        accessToken
+        email
+    }
+}

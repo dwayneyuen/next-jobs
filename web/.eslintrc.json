@@ -5,7 +5,7 @@
   "rules": {
     "@next/next/no-html-link-for-pages": [
       "error",
-      "quecel-web/pages/"
+      "web/pages/"
     ],
     "@next/next/no-img-element": 0
   }
