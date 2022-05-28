@@ -21,14 +21,7 @@ dotenv.config();
  */
 @Injectable()
 export class AuthzStrategy extends PassportStrategy(Strategy, "authz") {
-  constructor() {
-    super();
-  }
-
   async validate(request: Request): Promise<any> {
-    Logger.log(`request cookies: ${request.cookies}`);
-    Logger.log(`app session: ${request.cookies["appSession"]}`);
-    Logger.log(`secret? ${process.env.AUTH0_SECRET}`);
     const keystore = new JWKS.KeyStore();
     keystore.add(JWK.asKey(encryption(process.env.AUTH0_SECRET)));
     const { protected: header, cleartext } = JWE.decrypt(
@@ -45,11 +38,6 @@ export class AuthzStrategy extends PassportStrategy(Strategy, "authz") {
       Logger.log("Expired based on options when it was established");
       return [];
     }
-    Logger.log(
-      `[validate] clearText: ${JSON.stringify(
-        JSON.parse(cleartext.toString()),
-      )}`,
-    );
     return JSON.parse(cleartext.toString());
   }
 }

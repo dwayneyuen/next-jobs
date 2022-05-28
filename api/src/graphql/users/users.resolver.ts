@@ -1,6 +1,6 @@
 import { UseGuards } from "@nestjs/common";
 import { Query, Resolver } from "@nestjs/graphql";
-import { GqlAuthGuard } from "../../authz/GqlAuthGuard";
+import { GqlAuthGuard } from "../../auth/gql-auth.guard";
 import { User } from "./user.model";
 
 @Resolver(() => User)

@@ -2,8 +2,8 @@ import { join } from "path";
 import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 import { Module } from "@nestjs/common";
 import { GraphQLModule } from "@nestjs/graphql";
-import { AuthzModule } from "./authz/authz.module";
-import { UsersModule } from "./graphql/users/users.module";
+import { AuthModule } from "./auth/auth.module";
+import { GraphqlModule } from "./graphql/graphql.module";
 
 @Module({
   imports: [
@@ -13,11 +13,11 @@ import { UsersModule } from "./graphql/users/users.module";
         credentials: true,
       },
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), "src/graphql/schema.gql"),
+      autoSchemaFile: join(process.cwd(), "src/graphql/schema.graphql"),
       sortSchema: true,
     }),
-    AuthzModule,
-    UsersModule,
+    AuthModule,
+    GraphqlModule,
   ],
   controllers: [],
   providers: [],

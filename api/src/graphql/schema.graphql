@@ -1,11 +1,13 @@
-type User {
-  id: String!
-  email: String!
-  accessToken: String!
-}
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
 
 type Query {
   getMe: User
-  getUser(email: String!): User
-  setUser(email: String!): User
+}
+
+type User {
+  accessToken: String!
+  email: String!
+  id: String!
 }
