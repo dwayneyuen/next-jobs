@@ -3,8 +3,6 @@ import { Logger } from "@nestjs/common";
 import { Command, CommandRunner } from "nest-commander";
 import { glob } from "glob";
 import * as ts from "typescript";
-import { RepeatOptions } from "bullmq";
-import Repeatable from "./fixtures/repeatable";
 
 /**
  * Parse the source file and detect when its default export is RepeatableJob,
