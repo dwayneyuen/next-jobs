@@ -41,7 +41,7 @@ type User = {
   sub: string;
 };
 
-type Session = {
+export type Session = {
   user: User;
   idToken: string;
   accessToken: string;
