@@ -21,100 +21,80 @@ export type Scalars = {
   Float: number;
 };
 
-export type Mutation = {
-  __typename?: "Mutation";
-  upsertUser: User;
-};
-
-export type MutationUpsertUserArgs = {
-  auth0Sub: Scalars["String"];
-  email: Scalars["String"];
-  emailVerified: Scalars["Boolean"];
-};
-
 export type Query = {
   __typename?: "Query";
-  getUser: User;
+  getMe?: Maybe<User>;
+  getUser?: Maybe<User>;
+  setUser?: Maybe<User>;
 };
 
 export type QueryGetUserArgs = {
   email: Scalars["String"];
 };
 
+export type QuerySetUserArgs = {
+  email: Scalars["String"];
+};
+
 export type User = {
   __typename?: "User";
+  accessToken: Scalars["String"];
   email: Scalars["String"];
   id: Scalars["String"];
 };
 
-export type UpsertUserMutationVariables = Exact<{
-  auth0Sub: Scalars["String"];
-  email: Scalars["String"];
-  emailVerified: Scalars["Boolean"];
-}>;
+export type GetMeQueryVariables = Exact<{ [key: string]: never }>;
 
-export type UpsertUserMutation = {
-  __typename?: "Mutation";
-  upsertUser: { __typename?: "User"; id: string };
+export type GetMeQuery = {
+  __typename?: "Query";
+  getMe?: { __typename?: "User"; accessToken: string; email: string } | null;
 };
 
-export const UpsertUserDocument = gql`
-  mutation upsertUser(
-    $auth0Sub: String!
-    $email: String!
-    $emailVerified: Boolean!
-  ) {
-    upsertUser(
-      auth0Sub: $auth0Sub
-      email: $email
-      emailVerified: $emailVerified
-    ) {
-      id
+export const GetMeDocument = gql`
+  query getMe {
+    getMe {
+      accessToken
+      email
     }
   }
 `;
-export type UpsertUserMutationFn = Apollo.MutationFunction<
-  UpsertUserMutation,
-  UpsertUserMutationVariables
->;
 
 /**
- * __useUpsertUserMutation__
+ * __useGetMeQuery__
  *
- * To run a mutation, you first call `useUpsertUserMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpsertUserMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
+ * To run a query within a React component, call `useGetMeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetMeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
  *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const [upsertUserMutation, { data, loading, error }] = useUpsertUserMutation({
+ * const { data, loading, error } = useGetMeQuery({
  *   variables: {
- *      auth0Sub: // value for 'auth0Sub'
- *      email: // value for 'email'
- *      emailVerified: // value for 'emailVerified'
  *   },
  * });
  */
-export function useUpsertUserMutation(
-  baseOptions?: Apollo.MutationHookOptions<
-    UpsertUserMutation,
-    UpsertUserMutationVariables
-  >
+export function useGetMeQuery(
+  baseOptions?: Apollo.QueryHookOptions<GetMeQuery, GetMeQueryVariables>
 ) {
   const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useMutation<UpsertUserMutation, UpsertUserMutationVariables>(
-    UpsertUserDocument,
+  return Apollo.useQuery<GetMeQuery, GetMeQueryVariables>(
+    GetMeDocument,
     options
   );
 }
-export type UpsertUserMutationHookResult = ReturnType<
-  typeof useUpsertUserMutation
->;
-export type UpsertUserMutationResult =
-  Apollo.MutationResult<UpsertUserMutation>;
-export type UpsertUserMutationOptions = Apollo.BaseMutationOptions<
-  UpsertUserMutation,
-  UpsertUserMutationVariables
+export function useGetMeLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<GetMeQuery, GetMeQueryVariables>
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<GetMeQuery, GetMeQueryVariables>(
+    GetMeDocument,
+    options
+  );
+}
+export type GetMeQueryHookResult = ReturnType<typeof useGetMeQuery>;
+export type GetMeLazyQueryHookResult = ReturnType<typeof useGetMeLazyQuery>;
+export type GetMeQueryResult = Apollo.QueryResult<
+  GetMeQuery,
+  GetMeQueryVariables
 >;

@@ -5,6 +5,7 @@ import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import { classNames } from "./class-names";
 import BlackButton from "../components/BlackButton";
 import { PlusIcon } from "@heroicons/react/solid";
+import Link from "next/link";
 
 const user = {
   name: "Tom Cook",
@@ -12,13 +13,13 @@ const user = {
   imageUrl: "black-logo.svg",
 };
 const navigation = [
-  { name: "Dashboard", href: "#", current: true },
+  { name: "Dashboard", href: "/dashboard", current: true },
   { name: "Activity", href: "#", current: false },
-  { name: "Settings", href: "#", current: false },
+  { name: "Settings", href: "/settings", current: false },
 ];
 const userNavigation = [
   { name: "Your Profile", href: "#" },
-  { name: "Settings", href: "#" },
+  { name: "Settings", href: "/settings" },
   { name: "Sign out", href: "#" },
 ];
 
@@ -49,19 +50,18 @@ function Dashboard() {
                     </div>
                     <div className="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
                       {navigation.map((item) => (
-                        <a
-                          key={item.name}
-                          href={item.href}
+                        <div
+                          aria-current={item.current ? "page" : undefined}
                           className={classNames(
                             item.current
                               ? "border-indigo-500 text-gray-900"
                               : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
                             "inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                           )}
-                          aria-current={item.current ? "page" : undefined}
+                          key={item.name}
                         >
-                          {item.name}
-                        </a>
+                          <Link href={item.href}>{item.name}</Link>
+                        </div>
                       ))}
                     </div>
                   </div>

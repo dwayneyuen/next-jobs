@@ -1,5 +1,7 @@
 schema: '../api/src/graphql/schema.graphql'
-documents: './graphql/**/*.graphql'
+documents:
+  - './graphql/**/*.graphql'
+  - './pages/**/*.graphql'
 generates:
   graphql/generated.ts:
     plugins:

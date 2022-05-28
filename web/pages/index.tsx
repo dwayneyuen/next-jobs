@@ -3,6 +3,7 @@ import { Popover, Transition } from "@headlessui/react";
 import { MenuIcon, XIcon } from "@heroicons/react/outline";
 import { useUser } from "@auth0/nextjs-auth0";
 import BlackButton from "../components/BlackButton";
+import { useRouter } from "next/router";
 
 const navigation = [
   { name: "Product", href: "#" },
@@ -13,6 +14,11 @@ const navigation = [
 
 export default function Index() {
   const { user } = useUser();
+  const { push } = useRouter();
+  if (user) {
+    push("/dashboard").then();
+  }
+
   return (
     <div className="bg-gray-50">
       <div className="relative overflow-hidden">
