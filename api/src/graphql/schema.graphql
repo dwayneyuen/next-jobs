@@ -1,0 +1,11 @@
+type User {
+  id: String!
+  email: String!
+  accessToken: String!
+}
+
+type Query {
+  getMe: User
+  getUser(email: String!): User
+  setUser(email: String!): User
+}
