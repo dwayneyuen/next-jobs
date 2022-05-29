@@ -1,8 +1,9 @@
-import { Logger, UseGuards } from "@nestjs/common";
+import { UseGuards } from "@nestjs/common";
 import { Query, Resolver } from "@nestjs/graphql";
-import { GqlAuthGuard, Session } from "../../auth/gql-auth.guard";
+import { GqlAuthGuard } from "../../auth/gql-auth.guard";
 import { UserService } from "../../prisma/user.service";
 import { CurrentSession } from "../decorators/current-session";
+import { Auth0Session } from "../../auth/authz.strategy";
 import { User } from "./user.model";
 
 @Resolver(() => User)
@@ -11,7 +12,7 @@ export class UsersResolver {
 
   @UseGuards(GqlAuthGuard)
   @Query(() => User, { nullable: true })
-  async getMe(@CurrentSession() session: Session) {
+  async getMe(@CurrentSession() session: Auth0Session) {
     return this.userService.user({ email: session.user.email });
   }
 }
