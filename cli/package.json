@@ -21,11 +21,13 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@apollo/client": "^3.6.5",
     "@dwayneyuen/next-jobs": "^0.0.3",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
     "bullmq": "^1.83.0",
+    "dotenv": "^16.0.1",
     "glob": "^8.0.3",
     "nest-commander": "^2.5.0",
     "next": "^12.1.6",

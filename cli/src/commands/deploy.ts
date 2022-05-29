@@ -3,6 +3,12 @@ import { Logger } from "@nestjs/common";
 import { Command, CommandRunner } from "nest-commander";
 import { glob } from "glob";
 import * as ts from "typescript";
+import { parse, relative } from "path";
+import apolloClient from "src/apollo-client";
+import { gql } from "@apollo/client";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 /**
  * Parse the source file and detect when its default export is RepeatableJob,
@@ -38,7 +44,6 @@ export const parseFile = (
                 Logger.debug(`declaration: ${JSON.stringify(declaration)}`);
                 if (ts.isIdentifier(declaration.name)) {
                   if (declaration.initializer.arguments.length > 0) {
-                    // const argument = node.expression.arguments[0];
                     if (
                       ts.isStringLiteral(declaration.initializer.arguments[0])
                     ) {
@@ -111,7 +116,8 @@ export class DeployCommand implements CommandRunner {
     if (passedParams.length < 0) {
       Logger.warn("No deploy path!");
     }
-    glob(`${passedParams[0]}/pages/api/jobs/**/*.+(ts|js)`, (err, files) => {
+    const baseDirectory = `${passedParams[0]}/pages/api/jobs`;
+    glob(`${baseDirectory}/**/*.+(ts|js)`, async (err, files) => {
       const program = ts.createProgram({
         options: { allowJs: true },
         rootNames: files,
@@ -119,16 +125,32 @@ export class DeployCommand implements CommandRunner {
       for (const file of files) {
         const sourceFile = program.getSourceFile(file);
         const result = parseFile(sourceFile);
-      }
-    });
-    glob(`${passedParams[0]}/pages/api/queues/**/*.+(ts|js)`, (err, files) => {
-      const program = ts.createProgram({
-        options: { allowJs: true },
-        rootNames: files,
-      });
-      for (const file of files) {
-        const sourceFile = program.getSourceFile(file);
-        const result = parseFile(sourceFile);
+        const baseDirectory = `${passedParams[0]}/pages/api/jobs`;
+        if (result?.type === "JobQueue") {
+          await apolloClient.mutate({
+            mutation: gql`
+              mutation createQueue(
+                $accessToken: String!
+                $name: String!
+                $path: String!
+              ) {
+                createQueue(
+                  accessToken: $accessToken
+                  name: $name
+                  path: $path
+                ) {
+                  result
+                }
+              }
+            `,
+            variables: {
+              accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
+              name: parse(file).name,
+              path: relative(baseDirectory, file),
+            },
+          });
+        } else if (result?.type === "RepeatableJob") {
+        }
       }
     });
     return Promise.resolve(undefined);
