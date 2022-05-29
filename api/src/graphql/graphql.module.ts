@@ -1,10 +1,11 @@
 import { Module } from "@nestjs/common";
-import { UsersModule } from "./users/users.module";
-import { QueuesModule } from "src/graphql/queues/queues.module";
+import { QueuesResolver } from "src/graphql/queues/queues.resolver";
+import { UsersResolver } from "src/graphql/users/users.resolver";
+import { PrismaModule } from "src/prisma/prisma.module";
 
 @Module({
   exports: [],
-  imports: [QueuesModule, UsersModule],
-  providers: [],
+  imports: [PrismaModule],
+  providers: [QueuesResolver, UsersResolver],
 })
 export class GraphqlModule {}

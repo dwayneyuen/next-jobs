@@ -1,7 +1,7 @@
 import { Resolver } from "@nestjs/graphql";
 
 @Resolver()
-export class JobsResolver {
+export class ScheduledJobsResolver {
   // @UseGuards(GqlAuthGuard)
   // @Mutation()
   // async createQueue() {}
