@@ -7,7 +7,7 @@ import {
   Query,
   Resolver,
 } from "@nestjs/graphql";
-import { User } from "src/graphql/users/user.model";
+import { UserModel } from "src/graphql/users/user.model";
 import { GqlAuthGuard } from "src/auth/gql-auth.guard";
 import { UserService } from "src/prisma/user.service";
 import { CurrentSession } from "src/graphql/decorators/current-session";
@@ -20,7 +20,7 @@ class CreateUserResponse {
   result: "success" | "email-taken" | "invalid-token";
 }
 
-@Resolver(() => User)
+@Resolver(() => UserModel)
 export class UsersResolver {
   constructor(private userService: UserService) {}
 
@@ -64,7 +64,7 @@ export class UsersResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => User, { nullable: true })
+  @Query(() => UserModel, { nullable: true })
   async getMe(@CurrentSession() session: Auth0Session) {
     return this.userService.user({ email: session.user.email });
   }

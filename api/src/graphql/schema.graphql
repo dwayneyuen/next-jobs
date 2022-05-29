@@ -2,19 +2,24 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type CreateQueueResponse {
+  result: String!
+}
+
 type CreateUserResponse {
   result: String!
 }
 
 type Mutation {
+  createQueue(accessToken: String!, name: String!, path: String!): CreateQueueResponse
   createUser(baseUrl: String!, email: String!, masterToken: String!): CreateUserResponse
 }
 
 type Query {
-  getMe: User
+  getMe: UserModel
 }
 
-type User {
+type UserModel {
   accessToken: String!
   email: String!
   id: String!
