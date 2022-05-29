@@ -23,7 +23,6 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@auth0/nextjs-auth0": "^1.9.0",
     "@nestjs/apollo": "^10.0.12",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
@@ -33,20 +32,14 @@
     "@nestjs/platform-express": "^8.0.0",
     "@prisma/client": "^3.14.0",
     "apollo-server-express": "^3.7.0",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.13.2",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.0.1",
     "futoin-hkdf": "^1.5.1",
     "graphql": "^16.5.0",
     "jose": "^2.0.5",
-    "jsonwebtoken": "^8.5.1",
-    "jwks-rsa": "^2.1.3",
     "openid-client": "^5.1.6",
     "passport": "^0.5.3",
-    "passport-auth0": "^1.4.2",
     "passport-custom": "^1.1.1",
-    "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0"

@@ -6,7 +6,7 @@ import {
 } from "@nestjs/graphql";
 import { NestFactory } from "@nestjs/core";
 import { printSchema } from "graphql";
-import { UsersResolver } from "../src/graphql/users/users.resolver";
+import { UsersResolver } from "src/graphql/users/users.resolver";
 
 async function generateSchema(): Promise<string> {
   const app = await NestFactory.create(GraphQLSchemaBuilderModule);

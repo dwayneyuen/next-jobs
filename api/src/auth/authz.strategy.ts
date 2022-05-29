@@ -1,4 +1,3 @@
-import { randomInt } from "crypto";
 import { Injectable, Logger } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy } from "passport-custom";
@@ -7,6 +6,8 @@ import { JWE, JWK, JWKS } from "jose";
 import * as hkdf from "futoin-hkdf";
 import * as dotenv from "dotenv";
 import { UserService } from "../prisma/user.service";
+import { generateAccessToken } from "src/access-token";
+import { Auth0Session } from "src/authz-session";
 
 const BYTE_LENGTH = 32;
 const ENCRYPTION_INFO = "JWE CEK";
@@ -17,42 +18,6 @@ export const encryption = (secret: string): Buffer =>
 const epoch = (): number => (Date.now() / 1000) | 0; // eslint-disable-line no-bitwise
 
 dotenv.config();
-
-type User = {
-  given_name: string;
-  family_name: string;
-  nickname: string;
-  name: string;
-  picture: string;
-  locale: string;
-  updated_at: Date;
-  email: string;
-  email_verified: boolean;
-  sub: string;
-};
-
-export type Auth0Session = {
-  user: User;
-  idToken: string;
-  accessToken: string;
-  accessTokenScope: string;
-  accessTokenExpiresAt: number;
-  token_type: string;
-};
-
-const tokenCharset =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-/**
- * Generate an 32 char length alphanumeric access token
- */
-const generateAccessToken = (): string => {
-  let token = "";
-  for (let i = 0; i < 32; i++) {
-    token += tokenCharset.charAt(randomInt(tokenCharset.length));
-  }
-  return token;
-};
 
 /**
  * Auth0 strategy implemented using nextjs-auth0 as a reference
