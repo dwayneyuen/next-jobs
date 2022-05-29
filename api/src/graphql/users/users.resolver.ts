@@ -1,10 +1,10 @@
 import { UseGuards } from "@nestjs/common";
 import { Query, Resolver } from "@nestjs/graphql";
-import { GqlAuthGuard } from "../../auth/gql-auth.guard";
-import { UserService } from "../../prisma/user.service";
-import { CurrentSession } from "../decorators/current-session";
-import { Auth0Session } from "../../auth/authz.strategy";
-import { User } from "./user.model";
+import { User } from "src/graphql/users/user.model";
+import { GqlAuthGuard } from "src/auth/gql-auth.guard";
+import { UserService } from "src/prisma/user.service";
+import { Auth0Session } from "src/auth/authz.strategy";
+import { CurrentSession } from "src/graphql/decorators/current-session";
 
 @Resolver(() => User)
 export class UsersResolver {
