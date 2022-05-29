@@ -222,7 +222,9 @@ function Index() {
                           Email
                         </dt>
                         <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span className="flex-grow">Margot Foster</span>
+                          <span className="flex-grow">
+                            {data?.getMe?.email}
+                          </span>
                           <span className="ml-4 flex-shrink-0">
                             <button
                               type="button"
@@ -238,7 +240,9 @@ function Index() {
                           Access token
                         </dt>
                         <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span className="flex-grow">AaBbCcDdEeFf</span>
+                          <span className="flex-grow">
+                            {data?.getMe?.accessToken}
+                          </span>
                           <span className="ml-4 flex-shrink-0">
                             <button
                               type="button"
