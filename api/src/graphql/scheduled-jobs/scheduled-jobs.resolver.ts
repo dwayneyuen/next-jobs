@@ -1,12 +1,5 @@
 import { Resolver } from "@nestjs/graphql";
+import { ScheduledJobModel } from "src/graphql/scheduled-jobs/scheduled-job.model";
 
-@Resolver()
-export class ScheduledJobsResolver {
-  // @UseGuards(GqlAuthGuard)
-  // @Mutation()
-  // async createQueue() {}
-  //
-  // @UseGuards(GqlAuthGuard)
-  // @Mutation()
-  // async createScheduledJob() {}
-}
+@Resolver(() => ScheduledJobModel)
+export class ScheduledJobsResolver {}
