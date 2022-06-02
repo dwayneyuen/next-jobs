@@ -4,8 +4,7 @@ import { Command, CommandRunner } from "nest-commander";
 import { glob } from "glob";
 import * as ts from "typescript";
 import { parse, relative } from "path";
-import apolloClient from "src/apollo-client";
-import { gql } from "@apollo/client";
+import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -112,6 +111,8 @@ export const parseFile = (
   description: "deploy application",
 })
 export class DeployCommand implements CommandRunner {
+  constructor(private apolloClient: ApolloClient<NormalizedCacheObject>) {}
+
   run(passedParams: string[], _options?: Record<string, any>): Promise<void> {
     if (passedParams.length < 0) {
       Logger.warn("No deploy path!");
@@ -126,18 +127,20 @@ export class DeployCommand implements CommandRunner {
         const sourceFile = program.getSourceFile(file);
         const result = parseFile(sourceFile);
         const baseDirectory = `${passedParams[0]}/pages/api/jobs`;
-        if (result?.type === "JobQueue") {
-          await apolloClient.mutate({
+        if (result?.type === "RepeatableJob") {
+          await this.apolloClient.mutate({
             mutation: gql`
-              mutation createQueue(
+              mutation createScheduledJob(
                 $accessToken: String!
                 $name: String!
                 $path: String!
+                $schedule: String!
               ) {
-                createQueue(
+                createScheduledJob(
                   accessToken: $accessToken
                   name: $name
                   path: $path
+                  schedule: $schedule
                 ) {
                   result
                 }
@@ -147,9 +150,9 @@ export class DeployCommand implements CommandRunner {
               accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
               name: parse(file).name,
               path: relative(baseDirectory, file),
+              schedule: result.schedule,
             },
           });
-        } else if (result?.type === "RepeatableJob") {
         }
       }
     });
