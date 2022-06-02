@@ -5,8 +5,6 @@ import { config } from "dotenv";
 
 config();
 
-Logger.log(`uri: ${process.env.NEXT_JOBS_SERVER_URL}/graphql`);
-
 @Module({
   exports: [ApolloClient],
   providers: [

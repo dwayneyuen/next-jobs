@@ -1,20 +1,50 @@
-import { Args, Field, Mutation, ObjectType, Resolver } from "@nestjs/graphql";
+import {
+  Args,
+  Field,
+  Mutation,
+  ObjectType,
+  Query,
+  registerEnumType,
+  Resolver,
+} from "@nestjs/graphql";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { CronJob } from "cron";
-import { Logger } from "@nestjs/common";
+import { Delete, Logger } from "@nestjs/common";
+import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
+import { HttpService } from "@nestjs/axios";
 import { EnvironmentVariables } from "src/environment-variables";
 
-@ObjectType()
-class CreateScheduledJobResponse {
-  @Field()
-  result: "success" | "invalid-token";
+enum CreateScheduledJobResult {
+  SUCCESS,
+  INVALID_TOKEN,
+  NOT_IMPLEMENTED,
 }
 
-@ObjectType()
-class CreateQueueResponse {
-  @Field()
-  result: "success" | "invalid-token";
+enum DeleteScheduledJobsResult {
+  SUCCESS,
+  INVALID_TOKEN,
+  NOT_IMPLEMENTED,
 }
+
+registerEnumType(CreateScheduledJobResult, {
+  name: "CreateScheduledJobResult",
+});
+
+registerEnumType(DeleteScheduledJobsResult, {
+  name: "DeleteScheduledJobsResult",
+});
+
+// @ObjectType()
+// class CreateScheduledJobResponse {
+//   @Field()
+//   result: "success" | "invalid-token" | "not-implemented";
+// }
+//
+// @ObjectType()
+// class DeleteScheduledJobResponse {
+//   @Field()
+//   result: "success" | "invalid-token" | "not-implemented";
+// }
 
 /**
  * Catch-all resolver for the next-jobs server
@@ -23,8 +53,17 @@ class CreateQueueResponse {
 export class ServerResolver {
   constructor(
     private environmentVariables: EnvironmentVariables,
+    private httpService: HttpService,
     private schedulerRegistry: SchedulerRegistry,
   ) {}
+
+  /**
+   * Query must be defined to be a valid graphql resolver
+   */
+  @Query(() => String)
+  async foo(): Promise<string> {
+    return "foo";
+  }
 
   /**
    * Mutation to create a scheduled job
@@ -37,43 +76,50 @@ export class ServerResolver {
    * @param path
    * @param schedule
    */
-  @Mutation(() => CreateScheduledJobResponse)
+  @Mutation(() => CreateScheduledJobResult)
   async createScheduledJob(
     // TODO: Add guard for access token authentication
     @Args("accessToken") accessToken: string,
     @Args("name") name: string,
     @Args("path") path: string,
     @Args("schedule") schedule: string,
-  ): Promise<CreateScheduledJobResponse> {
+  ): Promise<CreateScheduledJobResult> {
+    Logger.log(
+      `accessToken: ${accessToken}, name: ${name}, path: ${path}, schedule: ${schedule}`,
+    );
     // Self-hosted
-    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN) {
+    if (this.environmentVariables.NEXT_JOBS_SELF_HOSTED) {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
-        return { result: "invalid-token" };
+        return CreateScheduledJobResult.INVALID_TOKEN;
       }
       const job = new CronJob(schedule, () => {
         Logger.log(
-          `[CronJob] name: ${name}, path: ${path}, schedule: ${schedule}`,
+          `[CronJob] name: ${name}, path: ${path}, schedule: ${schedule},${this.environmentVariables.NEXT_JOBS_BASE_URL}/${path}`,
+        );
+        // TODO: Authorization header
+        this.httpService.post(
+          `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${path}`,
         );
       });
       this.schedulerRegistry.addCronJob(name, job);
-      return { result: "success" };
+      job.start();
+      return CreateScheduledJobResult.SUCCESS;
     }
+    return CreateScheduledJobResult.NOT_IMPLEMENTED;
   }
 
-  @Mutation(() => CreateQueueResponse)
-  async createQueue(
-    // TODO: Add guard for access token authentication
+  @Mutation(() => DeleteScheduledJobsResult)
+  async deleteScheduledJobs(
     @Args("accessToken") accessToken: string,
-    @Args("name") name: string,
-    @Args("path") path: string,
-    @Args("schedule") schedule: string,
-  ): Promise<CreateQueueResponse> {
-    // Self-hosted
-    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN) {
+  ): Promise<DeleteScheduledJobsResult> {
+    if (this.environmentVariables.NEXT_JOBS_SELF_HOSTED) {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
-        return { result: "invalid-token" };
+        return DeleteScheduledJobsResult.INVALID_TOKEN;
       }
     }
-    return { result: "invalid-token" };
+    for (const name of this.schedulerRegistry.getCronJobs().keys()) {
+      this.schedulerRegistry.deleteCronJob(name);
+    }
+    return DeleteScheduledJobsResult.SUCCESS;
   }
 }

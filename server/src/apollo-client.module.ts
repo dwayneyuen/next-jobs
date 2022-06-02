@@ -1,6 +1,10 @@
 import { Module } from "@nestjs/common";
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import fetch from "node-fetch";
+import { config } from "dotenv";
 import { EnvironmentVariables } from "src/environment-variables";
+
+config();
 
 @Module({
   providers: [
@@ -10,7 +14,7 @@ import { EnvironmentVariables } from "src/environment-variables";
         cache: new InMemoryCache(),
         link: new HttpLink({
           fetch,
-          uri: `${new EnvironmentVariables().NEXT_JOBS_API_URL}/graphql`,
+          uri: `${new EnvironmentVariables().NEXT_JOBS_BASE_URL}/graphql`,
         }),
       }),
     },

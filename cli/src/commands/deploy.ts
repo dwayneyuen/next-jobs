@@ -113,10 +113,23 @@ export const parseFile = (
 export class DeployCommand implements CommandRunner {
   constructor(private apolloClient: ApolloClient<NormalizedCacheObject>) {}
 
-  run(passedParams: string[], _options?: Record<string, any>): Promise<void> {
+  async run(
+    passedParams: string[],
+    _options?: Record<string, any>,
+  ): Promise<void> {
     if (passedParams.length < 0) {
-      Logger.warn("No deploy path!");
+      Logger.error("No deploy path!");
+      return;
     }
+    Logger.debug("Deleting previously scheduled jobs...");
+    await this.apolloClient.mutate({
+      mutation: gql`
+        mutation deleteScheduledJobs($accessToken: String!) {
+          deleteScheduledJobs(accessToken: $accessToken)
+        }
+      `,
+      variables: { accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN },
+    });
     const baseDirectory = `${passedParams[0]}/pages/api/jobs`;
     glob(`${baseDirectory}/**/*.+(ts|js)`, async (err, files) => {
       const program = ts.createProgram({
@@ -128,6 +141,11 @@ export class DeployCommand implements CommandRunner {
         const result = parseFile(sourceFile);
         const baseDirectory = `${passedParams[0]}/pages/api/jobs`;
         if (result?.type === "RepeatableJob") {
+          const name = parse(file).name;
+          const schedule = result.schedule;
+          Logger.debug(
+            `Creating scheduled job: ${name}, schedule: ${schedule}`,
+          );
           await this.apolloClient.mutate({
             mutation: gql`
               mutation createScheduledJob(
@@ -141,16 +159,14 @@ export class DeployCommand implements CommandRunner {
                   name: $name
                   path: $path
                   schedule: $schedule
-                ) {
-                  result
-                }
+                )
               }
             `,
             variables: {
               accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
-              name: parse(file).name,
+              name,
               path: relative(baseDirectory, file),
-              schedule: result.schedule,
+              schedule,
             },
           });
         }

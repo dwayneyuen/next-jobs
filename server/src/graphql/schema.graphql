@@ -1,0 +1,24 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+enum CreateScheduledJobResult {
+  INVALID_TOKEN
+  NOT_IMPLEMENTED
+  SUCCESS
+}
+
+enum DeleteScheduledJobsResult {
+  INVALID_TOKEN
+  NOT_IMPLEMENTED
+  SUCCESS
+}
+
+type Mutation {
+  createScheduledJob(accessToken: String!, name: String!, path: String!, schedule: String!): CreateScheduledJobResult!
+  deleteScheduledJobs(accessToken: String!): DeleteScheduledJobsResult!
+}
+
+type Query {
+  foo: String!
+}

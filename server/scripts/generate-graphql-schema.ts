@@ -1,0 +1,22 @@
+import * as fs from "fs";
+import { join } from "path";
+import {
+  GraphQLSchemaBuilderModule,
+  GraphQLSchemaFactory,
+} from "@nestjs/graphql";
+import { NestFactory } from "@nestjs/core";
+import { printSchema } from "graphql";
+import { ServerResolver } from "src/graphql/server.resolver";
+
+async function generateSchema(): Promise<string> {
+  const app = await NestFactory.create(GraphQLSchemaBuilderModule);
+  await app.init();
+
+  const gqlSchemaFactory = app.get(GraphQLSchemaFactory);
+  const schema = await gqlSchemaFactory.create([ServerResolver]);
+  return printSchema(schema);
+}
+
+generateSchema().then((schema) => {
+  fs.writeFileSync(join(__dirname, "../src/graphql/schema.graphql"), schema);
+});

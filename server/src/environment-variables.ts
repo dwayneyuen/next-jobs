@@ -14,6 +14,9 @@ import { Injectable } from "@nestjs/common";
  *
  * @property NEXT_JOBS_REDIS_PORT Self-explanatory
  * @property NEXT_JOBS_REDIS_URL Self-explanatory
+ *
+ * @property NEXT_JOBS_SELF_HOSTED Set a value to enable the self-hosting
+ * configuration
  */
 @Injectable()
 export class EnvironmentVariables {
@@ -22,4 +25,6 @@ export class EnvironmentVariables {
   NEXT_JOBS_BASE_URL = process.env.NEXT_JOBS_BASE_URL;
   NEXT_JOBS_REDIS_PORT = parseInt(process.env.NEXT_JOBS_REDIS_PORT) ?? 6379;
   NEXT_JOBS_REDIS_URL = process.env.NEXT_JOBS_REDIS_URL ?? "localhost";
+  NEXT_JOBS_SELF_HOSTED = !!process.env.NEXT_JOBS_SELF_HOSTED;
+  NEXT_JOBS_PORT = process.env.PORT ?? 3000;
 }
