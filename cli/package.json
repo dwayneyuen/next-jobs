@@ -5,6 +5,9 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "bin": {
+    "next-jobs": "./dist/main.js"
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
