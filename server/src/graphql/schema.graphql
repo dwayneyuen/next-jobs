@@ -2,23 +2,28 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-enum CreateScheduledJobResult {
-  INVALID_TOKEN
-  NOT_IMPLEMENTED
-  SUCCESS
+input CreateQueueDto {
+  name: String!
+  path: String!
 }
 
-enum DeleteScheduledJobsResult {
-  INVALID_TOKEN
-  NOT_IMPLEMENTED
-  SUCCESS
+input CreateScheduledJobDto {
+  name: String!
+  path: String!
+  schedule: String!
 }
 
 type Mutation {
-  createScheduledJob(accessToken: String!, name: String!, path: String!, schedule: String!): CreateScheduledJobResult!
-  deleteScheduledJobs(accessToken: String!): DeleteScheduledJobsResult!
+  createQueues(accessToken: String!, queues: [CreateQueueDto!]!): Result!
+  createScheduledJobs(accessToken: String!, jobs: [CreateScheduledJobDto!]!): Result!
 }
 
 type Query {
   foo: String!
+}
+
+enum Result {
+  INVALID_TOKEN
+  NOT_IMPLEMENTED
+  SUCCESS
 }

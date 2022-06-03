@@ -3,7 +3,7 @@ import { Logger } from "@nestjs/common";
 import { Command, CommandRunner } from "nest-commander";
 import { glob } from "glob";
 import * as ts from "typescript";
-import { parse, relative } from "path";
+import { dirname, join, parse, relative } from "path";
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import * as dotenv from "dotenv";
 
@@ -101,7 +101,6 @@ export const parseFile = (
       }
     }
   });
-  Logger.debug(`result? ${JSON.stringify(result)}`);
   return result;
 };
 
@@ -121,57 +120,67 @@ export class DeployCommand implements CommandRunner {
       Logger.error("No deploy path!");
       return;
     }
-    Logger.debug("Deleting previously scheduled jobs...");
-    await this.apolloClient.mutate({
-      mutation: gql`
-        mutation deleteScheduledJobs($accessToken: String!) {
-          deleteScheduledJobs(accessToken: $accessToken)
-        }
-      `,
-      variables: { accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN },
-    });
     const baseDirectory = `${passedParams[0]}/pages/api/jobs`;
-    glob(`${baseDirectory}/**/*.+(ts|js)`, async (err, files) => {
-      const program = ts.createProgram({
-        options: { allowJs: true },
-        rootNames: files,
-      });
-      for (const file of files) {
-        const sourceFile = program.getSourceFile(file);
-        const result = parseFile(sourceFile);
-        const baseDirectory = `${passedParams[0]}/pages/api/jobs`;
-        if (result?.type === "RepeatableJob") {
-          const name = parse(file).name;
-          const schedule = result.schedule;
-          Logger.debug(
-            `Creating scheduled job: ${name}, schedule: ${schedule}`,
-          );
-          await this.apolloClient.mutate({
-            mutation: gql`
-              mutation createScheduledJob(
-                $accessToken: String!
-                $name: String!
-                $path: String!
-                $schedule: String!
-              ) {
-                createScheduledJob(
-                  accessToken: $accessToken
-                  name: $name
-                  path: $path
-                  schedule: $schedule
-                )
-              }
-            `,
-            variables: {
-              accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
-              name,
-              path: relative(baseDirectory, file),
-              schedule,
-            },
-          });
-        }
-      }
+    const scheduledJobs: { name: string; path: string; schedule: string }[] =
+      [];
+    const queues: { name: string; path: string }[] = [];
+    const files = glob.sync(`${baseDirectory}/**/*.+(ts|js)`);
+    const program = ts.createProgram({
+      options: { allowJs: true },
+      rootNames: files,
     });
+    for (const file of files) {
+      const sourceFile = program.getSourceFile(file);
+      const result = parseFile(sourceFile);
+      if (result?.type === "RepeatableJob") {
+        const name = parse(file).name;
+        const schedule = result.schedule;
+        const path = join(relative(baseDirectory, dirname(file)), name);
+        Logger.debug(
+          `Found scheduled job: name: ${name}, path: ${path}, schedule: ${schedule}`,
+        );
+        scheduledJobs.push({ name, path, schedule });
+      } else if (result?.type === "JobQueue") {
+        const name = parse(file).name;
+        const path = join(relative(baseDirectory, dirname(file)), name);
+        Logger.debug(`Found queue: ${name}, path: ${path}`);
+        queues.push({ name, path });
+      }
+    }
+    Logger.debug(`Creating scheduled jobs: ${JSON.stringify(scheduledJobs)}`);
+    if (scheduledJobs.length > 0) {
+      await this.apolloClient.mutate({
+        mutation: gql`
+          mutation createScheduledJobs(
+            $accessToken: String!
+            $jobs: [CreateScheduledJobDto!]!
+          ) {
+            createScheduledJobs(accessToken: $accessToken, jobs: $jobs)
+          }
+        `,
+        variables: {
+          accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
+          jobs: scheduledJobs,
+        },
+      });
+    }
+    Logger.debug(`Creating queues: ${JSON.stringify(queues)}`);
+    if (queues.length > 0) {
+      await this.apolloClient.mutate({
+        mutation: gql`
+          mutation createQueues(
+            $accessToken: String!
+            $queues: [CreateQueueDto!]!
+          ) {
+            createQueues(accessToken: $accessToken, queues: $queues)
+          }
+        `,
+        variables: {
+          accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
+          queues,
+        },
+      });
+    }
     return Promise.resolve(undefined);
   }
 }

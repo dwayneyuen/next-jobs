@@ -12,8 +12,7 @@ import { Injectable } from "@nestjs/common";
  * API server used to validate access tokens. The API server knows about access
  * tokens of all registered users and their registered ase urls.
  *
- * @property NEXT_JOBS_REDIS_PORT Self-explanatory
- * @property NEXT_JOBS_REDIS_URL Self-explanatory
+ * @property NEXT_JOBS_REDIS_URL Used to store jobs and queues
  *
  * @property NEXT_JOBS_SELF_HOSTED Set a value to enable the self-hosting
  * configuration
@@ -23,8 +22,8 @@ export class EnvironmentVariables {
   NEXT_JOBS_ACCESS_TOKEN = process.env.NEXT_JOBS_ACCESS_TOKEN;
   NEXT_JOBS_API_URL = process.env.NEXT_JOBS_API_URL;
   NEXT_JOBS_BASE_URL = process.env.NEXT_JOBS_BASE_URL;
-  NEXT_JOBS_REDIS_PORT = parseInt(process.env.NEXT_JOBS_REDIS_PORT) ?? 6379;
-  NEXT_JOBS_REDIS_URL = process.env.NEXT_JOBS_REDIS_URL ?? "localhost";
+  NEXT_JOBS_REDIS_URL =
+    process.env.NEXT_JOBS_REDIS_URL ?? "redis://localhost:6379";
   NEXT_JOBS_SELF_HOSTED = !!process.env.NEXT_JOBS_SELF_HOSTED;
   NEXT_JOBS_PORT = process.env.PORT ?? 3000;
 }

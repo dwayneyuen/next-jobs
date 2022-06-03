@@ -1,5 +1,4 @@
 import { NestFactory } from "@nestjs/core";
-import { BullModule } from "@nestjs/bull";
 import { config } from "dotenv";
 import { AppModule } from "./app.module";
 import { EnvironmentVariables } from "src/environment-variables";
@@ -28,16 +27,6 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create(AppModule);
-
-  if (environmentVariables.NEXT_JOBS_SELF_HOSTED) {
-    BullModule.registerQueue({
-      // TODO: support a customer limiter
-      name: environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    });
-  } else {
-    // Register a queue per access token? Fetch all access tokens?
-  }
-
   await app.listen(environmentVariables.NEXT_JOBS_PORT);
 }
 
