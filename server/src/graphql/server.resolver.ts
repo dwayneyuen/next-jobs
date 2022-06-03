@@ -132,9 +132,6 @@ export class ServerResolver {
         const jobId = await this.ioRedis.get(`${jobName}-id`);
         const existingJob = await this.jobsQueue.getJob(jobId);
         if (existingJob) {
-          this.logger.debug(
-            `Removing existing job: ${JSON.stringify(existingJob)}`,
-          );
           await existingJob.remove();
         }
         await this.ioRedis.del(`${jobName}-path`);
