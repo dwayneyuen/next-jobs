@@ -10,9 +10,9 @@ import {
 import { Logger } from "@nestjs/common";
 import { HttpService } from "@nestjs/axios";
 import IORedis from "ioredis";
-import { Queue, QueueScheduler } from "bullmq";
+import { Queue } from "bull";
 import { EnvironmentVariables } from "src/environment-variables";
-import { QueueSchedulerService } from "src/queue-scheduler.service";
+import { InjectQueue } from "@nestjs/bull";
 
 export enum Result {
   SUCCESS,
@@ -54,8 +54,8 @@ export class ServerResolver {
     private environmentVariables: EnvironmentVariables,
     private httpService: HttpService,
     private ioRedis: IORedis,
-    // TODO: Add eslint rule to allow underscore unused
-    private _queueSchedulerService: QueueSchedulerService,
+    @InjectQueue("jobs") private jobsQueue: Queue,
+    @InjectQueue("queues") private queuesQueue: Queue,
   ) {}
 
   private readonly logger = new Logger(ServerResolver.name);
@@ -69,13 +69,7 @@ export class ServerResolver {
   }
 
   /**
-   * Obliterate old queue paths and store new queue paths
-   *
-   * Queues are stored as <queue_name>$<path_to_callback>
-   *
-   * TODO: Throw an error if any queues have a duplicate name or path
-   * TODO: Find a way to do this without obliterating so that we can preserve
-   * metrics
+   * Save a mapping for each queue name to the path to call back to
    *
    * @param accessToken
    * @param queues
@@ -91,24 +85,23 @@ export class ServerResolver {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
         return Result.INVALID_TOKEN;
       }
-      await new Queue(QUEUES, { connection: this.ioRedis }).obliterate();
       const existingQueues = await this.ioRedis.smembers(QUEUES);
       for (const queue of existingQueues) {
-        this.logger.debug(`Remove queue: ${JSON.stringyify(queue)}`);
+        this.logger.debug(`Removing queue: ${queue}`);
         await this.ioRedis.del(queue);
         await this.ioRedis.srem(QUEUES, queue);
       }
       for (const queue of queues) {
-        this.logger.debug(`Adding queue: ${queue}`);
-        await this.ioRedis.set(queue.name, queue.path);
+        this.logger.debug(`Adding queue: ${JSON.stringify(queue)}`);
         await this.ioRedis.sadd(QUEUES, queue.name);
+        await this.ioRedis.set(queue.name, queue.path);
       }
       return Result.SUCCESS;
     }
   }
 
   /**
-   * Obliterate old scheduled jobs and create new scheduled jobs
+   * Register scheduled jobs
    *
    * For self-hosting, define the environment variable NEXT_JOBS_ACCESS_TOKEN.
    * Otherwise, this will call out to another API server to validate the
@@ -133,15 +126,32 @@ export class ServerResolver {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
         return Result.INVALID_TOKEN;
       }
-      const jobsQueue = await new Queue(JOBS, { connection: this.ioRedis });
-      await jobsQueue.drain();
+      const existingScheduledJobs = await this.ioRedis.smembers(JOBS);
+      for (const jobName of existingScheduledJobs) {
+        this.logger.debug(`Removing scheduled job: ${jobName}`);
+        const jobId = await this.ioRedis.get(`${jobName}-id`);
+        const existingJob = await this.jobsQueue.getJob(jobId);
+        if (existingJob) {
+          this.logger.debug(
+            `Removing existing job: ${JSON.stringify(existingJob)}`,
+          );
+          await existingJob.remove();
+        }
+        await this.ioRedis.del(`${jobName}-path`);
+        await this.ioRedis.del(`${jobName}-id`);
+        await this.ioRedis.srem(JOBS, jobName);
+      }
       for (const job of jobs) {
         this.logger.debug(`Adding scheduled job: ${JSON.stringify(job)}`);
-        await jobsQueue.add(
-          job.name,
-          { path: job.path },
-          { repeat: { cron: job.schedule } },
+        await this.ioRedis.sadd(JOBS, job.name);
+        await this.ioRedis.set(`${job.name}-path`, job.path);
+        const addedJob = await this.jobsQueue.add(
+          { data: "data" },
+          { repeat: { cron: "* * * * *" } },
         );
+        // We can't completely control the jobId with a repeat, so we have to
+        // store the one we get back
+        await this.ioRedis.set(`${job.name}-id`, addedJob.id);
       }
       return Result.SUCCESS;
     }

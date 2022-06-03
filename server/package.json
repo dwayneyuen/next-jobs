@@ -34,7 +34,6 @@
     "@nestjs/schedule": "^2.0.1",
     "apollo-server-express": "^3.8.1",
     "bull": "^4.8.3",
-    "bullmq": "^1.85.3",
     "dotenv": "^16.0.1",
     "graphql": "^16.5.0",
     "ioredis": "^5.0.6",

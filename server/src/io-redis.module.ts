@@ -12,10 +12,7 @@ const environmentVariables = new EnvironmentVariables();
   providers: [
     {
       provide: IORedis,
-      // maxRetriesPerRequest must be null for bullmq
-      useValue: new IORedis(environmentVariables.NEXT_JOBS_REDIS_URL, {
-        maxRetriesPerRequest: null,
-      }),
+      useValue: new IORedis(environmentVariables.NEXT_JOBS_REDIS_URL),
     },
   ],
 })
