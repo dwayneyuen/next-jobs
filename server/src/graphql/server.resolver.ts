@@ -17,6 +17,7 @@ export enum Result {
   SUCCESS,
   INVALID_TOKEN,
   NOT_IMPLEMENTED,
+  QUEUE_NOT_FOUND,
 }
 
 registerEnumType(Result, {
@@ -63,7 +64,6 @@ export class ServerResolver {
     private httpService: HttpService,
     private ioRedis: IORedis,
   ) {
-    // TODO: Populate workers array on startup
     this.queueSchedulers.set(
       QUEUES,
       new QueueScheduler(QUEUES, { connection: this.ioRedis }),
@@ -181,20 +181,31 @@ export class ServerResolver {
 
   /**
    * Place a job onto a queue
+   *
+   * TODO: delays
    */
-  // @Mutation(() => Result)
-  // async enqueueJob(
-  //   @Args("accessToken") accessToken: string,
-  //   @Args("queueName") queueName: string,
-  //   @Args("data") data: string,
-  // ): Promise<Result> {
-  //   if (this.environmentVariables.NEXT_JOBS_SELF_HOSTED) {
-  //     if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
-  //       return Result.INVALID_TOKEN;
-  //     }
-  //     new Queue(queueName).add({ data });
-  //     // await this.queue.add({ data });
-  //   }
-  //   return Result.SUCCESS;
-  // }
+  @Mutation(() => Result)
+  async enqueueJob(
+    @Args("accessToken") accessToken: string,
+    @Args("queueName") queueName: string,
+    @Args("data") data: string,
+  ): Promise<Result> {
+    if (this.environmentVariables.NEXT_JOBS_SELF_HOSTED) {
+      if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
+        return Result.INVALID_TOKEN;
+      }
+      const path = await this.ioRedis.get(queueName);
+      this.logger.debug(
+        `Looking up path for queue name: ${queueName}, path: ${path}`,
+      );
+      if (!path) {
+        return Result.QUEUE_NOT_FOUND;
+      }
+      await new Queue(QUEUES, { connection: this.ioRedis }).add(queueName, {
+        data,
+        path,
+      });
+    }
+    return Result.SUCCESS;
+  }
 }

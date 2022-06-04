@@ -16,6 +16,7 @@ input CreateScheduledJobDto {
 type Mutation {
   createQueues(accessToken: String!, queues: [CreateQueueDto!]!): Result!
   createScheduledJobs(accessToken: String!, jobs: [CreateScheduledJobDto!]!): Result!
+  enqueueJob(accessToken: String!, data: String!, queueName: String!): Result!
 }
 
 type Query {
@@ -25,5 +26,6 @@ type Query {
 enum Result {
   INVALID_TOKEN
   NOT_IMPLEMENTED
+  QUEUE_NOT_FOUND
   SUCCESS
 }
