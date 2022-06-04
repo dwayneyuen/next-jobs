@@ -10,9 +10,8 @@ import {
 import { Logger } from "@nestjs/common";
 import { HttpService } from "@nestjs/axios";
 import IORedis from "ioredis";
-import { Queue } from "bull";
+import { Job, Queue, QueueScheduler, Worker } from "bullmq";
 import { EnvironmentVariables } from "src/environment-variables";
-import { InjectQueue } from "@nestjs/bull";
 
 export enum Result {
   SUCCESS,
@@ -26,6 +25,7 @@ registerEnumType(Result, {
 
 export const JOBS = "jobs";
 export const QUEUES = "queues";
+export const WORKERS = "workers";
 
 @InputType()
 class CreateQueueDto {
@@ -45,6 +45,14 @@ class CreateScheduledJobDto {
   schedule: string;
 }
 
+const getKeys = (map: Map<any, any>) => {
+  const result = [];
+  for (const key of map.keys()) {
+    result.push(key);
+  }
+  return result;
+};
+
 /**
  * Catch-all resolver for the next-jobs server
  */
@@ -54,11 +62,41 @@ export class ServerResolver {
     private environmentVariables: EnvironmentVariables,
     private httpService: HttpService,
     private ioRedis: IORedis,
-    @InjectQueue("jobs") private jobsQueue: Queue,
-    @InjectQueue("queues") private queuesQueue: Queue,
-  ) {}
+  ) {
+    // TODO: Populate workers array on startup
+    this.queueSchedulers.set(
+      QUEUES,
+      new QueueScheduler(QUEUES, { connection: this.ioRedis }),
+    );
+    this.queueSchedulers.set(
+      JOBS,
+      new QueueScheduler(JOBS, { connection: this.ioRedis }),
+    );
+    this.workers.set(
+      QUEUES,
+      new Worker(
+        QUEUES,
+        async (job: Job) => {
+          this.logger.debug(`Processing queue job: ${JSON.stringify(job)}`);
+        },
+        { connection: this.ioRedis },
+      ),
+    );
+    this.workers.set(
+      JOBS,
+      new Worker(
+        JOBS,
+        async (job: Job) => {
+          this.logger.debug(`Processing scheduled job: ${JSON.stringify(job)}`);
+        },
+        { connection: this.ioRedis },
+      ),
+    );
+  }
 
   private readonly logger = new Logger(ServerResolver.name);
+  private readonly workers: Map<string, Worker> = new Map();
+  private readonly queueSchedulers: Map<string, QueueScheduler> = new Map();
 
   /**
    * Query must be defined to be a valid graphql resolver
@@ -80,14 +118,17 @@ export class ServerResolver {
     @Args({ name: "queues", type: () => [CreateQueueDto] })
     queues: CreateQueueDto[],
   ): Promise<Result> {
-    this.logger.debug(`accessToken: ${accessToken}, queues: ${queues}`);
+    this.logger.debug(
+      `accessToken: ${accessToken}, queues: ${JSON.stringify(queues)}`,
+    );
     if (this.environmentVariables.NEXT_JOBS_SELF_HOSTED) {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
         return Result.INVALID_TOKEN;
       }
+      // We store all queue names in a redis set, and store a key-value pair
+      // for each queue name, mapping queue name to queue path
       const existingQueues = await this.ioRedis.smembers(QUEUES);
       for (const queue of existingQueues) {
-        this.logger.debug(`Removing queue: ${queue}`);
         await this.ioRedis.del(queue);
         await this.ioRedis.srem(QUEUES, queue);
       }
@@ -103,13 +144,6 @@ export class ServerResolver {
   /**
    * Register scheduled jobs
    *
-   * For self-hosting, define the environment variable NEXT_JOBS_ACCESS_TOKEN.
-   * Otherwise, this will call out to another API server to validate the
-   * access token.
-   *
-   * TODO: Find a way to do this without obliterating so that we can preserve
-   * metrics
-   *
    * @param accessToken
    * @param jobs
    */
@@ -120,35 +154,25 @@ export class ServerResolver {
     @Args({ name: "jobs", type: () => [CreateScheduledJobDto] })
     jobs: CreateScheduledJobDto[],
   ): Promise<Result> {
-    this.logger.debug(`accessToken: ${accessToken}, jobs: ${jobs}`);
-    // Self-hosted
+    this.logger.debug(
+      `accessToken: ${accessToken}, jobs: ${JSON.stringify(jobs)}`,
+    );
     if (this.environmentVariables.NEXT_JOBS_SELF_HOSTED) {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
         return Result.INVALID_TOKEN;
       }
-      const existingScheduledJobs = await this.ioRedis.smembers(JOBS);
-      for (const jobName of existingScheduledJobs) {
-        this.logger.debug(`Removing scheduled job: ${jobName}`);
-        const jobId = await this.ioRedis.get(`${jobName}-id`);
-        const existingJob = await this.jobsQueue.getJob(jobId);
-        if (existingJob) {
-          await existingJob.remove();
-        }
-        await this.ioRedis.del(`${jobName}-path`);
-        await this.ioRedis.del(`${jobName}-id`);
-        await this.ioRedis.srem(JOBS, jobName);
+      const scheduledJobsQueue = new Queue(JOBS, { connection: this.ioRedis });
+      const repeatableJobs = await scheduledJobsQueue.getRepeatableJobs();
+      for (const repeatableJob of repeatableJobs) {
+        await scheduledJobsQueue.removeRepeatableByKey(repeatableJob.key);
       }
       for (const job of jobs) {
         this.logger.debug(`Adding scheduled job: ${JSON.stringify(job)}`);
-        await this.ioRedis.sadd(JOBS, job.name);
-        await this.ioRedis.set(`${job.name}-path`, job.path);
-        const addedJob = await this.jobsQueue.add(
-          { data: "data" },
-          { repeat: { cron: "* * * * *" } },
+        await scheduledJobsQueue.add(
+          job.name,
+          { path: job.path },
+          { repeat: { cron: job.schedule } },
         );
-        // We can't completely control the jobId with a repeat, so we have to
-        // store the one we get back
-        await this.ioRedis.set(`${job.name}-id`, addedJob.id);
       }
       return Result.SUCCESS;
     }
