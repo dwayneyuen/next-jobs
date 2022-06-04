@@ -54,6 +54,10 @@ const getKeys = (map: Map<any, any>) => {
   return result;
 };
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Catch-all resolver for the next-jobs server
  */
@@ -79,7 +83,7 @@ export class ServerResolver {
         async (job: Job) => {
           this.logger.debug(`Processing queue job: ${JSON.stringify(job)}`);
         },
-        { connection: this.ioRedis },
+        { concurrency: 100, connection: this.ioRedis },
       ),
     );
     this.workers.set(
@@ -89,7 +93,7 @@ export class ServerResolver {
         async (job: Job) => {
           this.logger.debug(`Processing scheduled job: ${JSON.stringify(job)}`);
         },
-        { connection: this.ioRedis },
+        { concurrency: 100, connection: this.ioRedis },
       ),
     );
   }
