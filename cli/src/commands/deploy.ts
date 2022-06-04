@@ -147,6 +147,7 @@ export class DeployCommand implements CommandRunner {
         queues.push({ name, path });
       }
     }
+    // TODO: Throw an error if duplicate scheduled job or queue name
     Logger.debug(`Creating scheduled jobs: ${JSON.stringify(scheduledJobs)}`);
     if (scheduledJobs.length > 0) {
       await this.apolloClient.mutate({
