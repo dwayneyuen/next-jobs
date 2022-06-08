@@ -30,7 +30,6 @@
   },
   "dependencies": {
     "@types/node": "^17.0.35",
-    "bullmq": "^1.83.0",
     "dotenv": "^16.0.1",
     "next": "^12.1.6",
     "winston": "^3.7.2"
