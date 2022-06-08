@@ -18,6 +18,7 @@ async function bootstrap() {
   });
   app.useGlobalPipes(new ValidationPipe({ disableErrorMessages: false }));
   app.use(cookieParser());
+
   await app.listen(3000);
 }
 

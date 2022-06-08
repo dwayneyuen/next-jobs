@@ -1,4 +1,4 @@
 import JobQueue from "./job-queue";
-import RepeatableJob from "./repeatable-job";
+import ScheduledJob from "./scheduled-job";
 
-export { JobQueue, RepeatableJob };
+export { JobQueue, ScheduledJob };

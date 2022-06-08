@@ -12,10 +12,12 @@ type Mutation {
 
 type Query {
   getMe: UserModel
+  getUserByAccessToken(accessToken: String!): UserModel
 }
 
 type UserModel {
   accessToken: String!
+  baseUrl: String
   email: String!
   id: String!
 }

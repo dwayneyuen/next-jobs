@@ -28,6 +28,6 @@ export class EnvironmentVariables {
     : 6379;
   NEXT_JOBS_REDIS_URL =
     process.env.NEXT_JOBS_REDIS_URL ?? "redis://localhost:6379";
-  NEXT_JOBS_SELF_HOSTED = !!process.env.NEXT_JOBS_SELF_HOSTED;
-  NEXT_JOBS_PORT = process.env.PORT ?? 3000;
+  NEXT_JOBS_SELF_HOSTED = true;
+  NEXT_JOBS_PORT = process.env.PORT ?? 4567;
 }

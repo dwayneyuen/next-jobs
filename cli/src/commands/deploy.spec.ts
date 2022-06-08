@@ -55,53 +55,57 @@ describe("parseFile", () => {
     expect(result.type).toEqual("JobQueue");
   });
 
-  it.skip("Given a JobQueue imported from another file, when calling parseFile, then should return JobQueue", () => {});
+  it.skip("Given a JobQueue imported from another file, when calling parseFile, then should return JobQueue", () => {
+    expect(true).toEqual(false);
+  });
 
-  it("Given a RepeatableJob as the default export, when calling parseFile, then should return RepeatableJob", () => {
-    const filename = `${__dirname}/fixtures/default-repeatable.ts`;
+  it("Given a ScheduledJob as the default export, when calling parseFile, then should return ScheduledJob", () => {
+    const filename = `${__dirname}/fixtures/default-scheduled.ts`;
     const program = ts.createProgram({ options: {}, rootNames: [filename] });
     const sourceFile = program.getSourceFile(filename);
 
     const result = parseFile(sourceFile);
 
-    expect(result.type).toEqual("RepeatableJob");
-    if (result.type === "RepeatableJob") {
+    expect(result.type).toEqual("ScheduledJob");
+    if (result.type === "ScheduledJob") {
       expect(result.schedule).toEqual("* * * * *");
     }
   });
 
-  it("Given a RepeatableJob declared and later exported as default, when calling parseFile, then should return RepeatableJob", () => {
-    const filename = `${__dirname}/fixtures/repeatable.ts`;
+  it("Given a ScheduledJob declared and later exported as default, when calling parseFile, then should return ScheduledJob", () => {
+    const filename = `${__dirname}/fixtures/scheduled.ts`;
     const program = ts.createProgram({ options: {}, rootNames: [filename] });
     const sourceFile = program.getSourceFile(filename);
 
     const result = parseFile(sourceFile);
 
-    expect(result.type).toEqual("RepeatableJob");
-    if (result.type === "RepeatableJob") {
+    expect(result.type).toEqual("ScheduledJob");
+    if (result.type === "ScheduledJob") {
       expect(result.schedule).toEqual("* * * * *");
     }
   });
 
-  it.skip("Given a RepeatableJob exported as default from an object, when calling parseFile, then should return RepeatableJob", () => {
-    const filename = `${__dirname}/fixtures/object-repeatable.ts`;
+  it.skip("Given a ScheduledJob exported as default from an object, when calling parseFile, then should return ScheduledJob", () => {
+    const filename = `${__dirname}/fixtures/object-scheduled.ts`;
     const program = ts.createProgram({ options: {}, rootNames: [filename] });
     const sourceFile = program.getSourceFile(filename);
 
     const result = parseFile(sourceFile);
 
-    expect(result.type).toEqual("RepeatableJob");
+    expect(result.type).toEqual("ScheduledJob");
   });
 
-  it.skip("Given a RepeatableJob exported as default from an array, when calling parseFile, then should return RepeatableJob", () => {
-    const filename = `${__dirname}/fixtures/array-repeatable.ts`;
+  it.skip("Given a ScheduledJob exported as default from an array, when calling parseFile, then should return ScheduledJob", () => {
+    const filename = `${__dirname}/fixtures/array-scheduled.ts`;
     const program = ts.createProgram({ options: {}, rootNames: [filename] });
     const sourceFile = program.getSourceFile(filename);
 
     const result = parseFile(sourceFile);
 
-    expect(result.type).toEqual("RepeatableJob");
+    expect(result.type).toEqual("ScheduledJob");
   });
 
-  it.skip("Given a RepeatableJob imported from another file, when calling parseFile, then should return RepeatableJob", () => {});
+  it.skip("Given a ScheduledJob imported from another file, when calling parseFile, then should return ScheduledJob", () => {
+    expect(true).toEqual(false);
+  });
 });

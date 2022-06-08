@@ -1,5 +1,5 @@
 /**
- * Implementation of RepeatableJob
+ * Implementation of ScheduledJob
  *
  * Takes in a cron schedule and a callback and executes the callback each iteration.
  * Returns a NextApiHandler so that it can be used as an API route.
@@ -11,10 +11,10 @@ import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 import { Job, Queue, QueueScheduler, Worker } from "bullmq";
 import { logger } from "./logger";
 
-export type RepeatableJobCallbackType = (() => Promise<void>) | (() => void);
+export type ScheduledJobCallbackType = (() => Promise<void>) | (() => void);
 
-type RepeatableJobType = {
-  callback: RepeatableJobCallbackType;
+type ScheduledJobType = {
+  callback: ScheduledJobCallbackType;
   name: string;
 };
 
@@ -24,9 +24,9 @@ type RepeatableJobType = {
  * @param callback
  * @constructor
  */
-function RepeatableJob<T>(
+function ScheduledJob<T>(
   schedule: string,
-  callback: RepeatableJobCallbackType
+  callback: ScheduledJobCallbackType
 ): { start(): Promise<void> } & NextApiHandler {
   let initialized = false;
   const jobName = __filename
@@ -37,26 +37,26 @@ function RepeatableJob<T>(
   new QueueScheduler(jobName, {
     connection: { host: "localhost", port: 6379 },
   });
-  const queue = new Queue<RepeatableJobType>(jobName, {
+  const queue = new Queue<ScheduledJobType>(jobName, {
     connection: { host: "localhost", port: 6379 },
   });
 
-  const worker = new Worker<RepeatableJobType>(
+  const worker = new Worker<ScheduledJobType>(
     jobName,
-    async (job: Job<RepeatableJobType>) => {
-      logger.info(`[RepeatableJob.${jobName}] processing name: ${job.name}`);
+    async (job: Job<ScheduledJobType>) => {
+      logger.info(`[ScheduledJob.${jobName}] processing name: ${job.name}`);
       await callback();
     },
     { connection: { host: "localhost", port: 6379 } }
   );
 
-  worker.on("completed", (job: Job<RepeatableJobType>) => {
-    logger.info(`[RepeatableJob.${jobName}] completed: ${job.data.name}`);
+  worker.on("completed", (job: Job<ScheduledJobType>) => {
+    logger.info(`[ScheduledJob.${jobName}] completed: ${job.data.name}`);
   });
 
-  worker.on("failed", (job: Job<RepeatableJobType>, error: Error) => {
+  worker.on("failed", (job: Job<ScheduledJobType>, error: Error) => {
     logger.info(
-      `[RepeatableJob.${jobName}] failed: ${job.data.name}, error: ${error}`
+      `[ScheduledJob.${jobName}] failed: ${job.data.name}, error: ${error}`
     );
   });
 
@@ -68,7 +68,7 @@ function RepeatableJob<T>(
 
     if (!initialized) {
       initialized = true;
-      logger.info(`[RepeatableJob.${jobName}] started`);
+      logger.info(`[ScheduledJob.${jobName}] started`);
       await queue.add(
         jobName,
         { callback, name: jobName },
@@ -76,7 +76,7 @@ function RepeatableJob<T>(
       );
     }
 
-    logger.info(`[RepeatableJob.${jobName}] called manually`);
+    logger.info(`[ScheduledJob.${jobName}] called manually`);
     await callback();
     res.status(200).end();
   };
@@ -84,7 +84,7 @@ function RepeatableJob<T>(
   nextApiHandler.start = async () => {
     if (!initialized) {
       initialized = true;
-      logger.info(`[RepeatableJob.${jobName}] started`);
+      logger.info(`[ScheduledJob.${jobName}] started`);
       await queue.add(
         jobName,
         { callback, name: jobName },
@@ -96,4 +96,4 @@ function RepeatableJob<T>(
   return nextApiHandler;
 }
 
-export default RepeatableJob;
+export default ScheduledJob;

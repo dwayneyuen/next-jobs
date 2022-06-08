@@ -63,6 +63,11 @@ export class UsersResolver {
     }
   }
 
+  @Query(() => UserModel, { nullable: true })
+  async getUserByAccessToken(@Args("accessToken") accessToken: string) {
+    return this.userService.user({ accessToken });
+  }
+
   @UseGuards(GqlAuthGuard)
   @Query(() => UserModel, { nullable: true })
   async getMe(@CurrentSession() session: Auth0Session) {

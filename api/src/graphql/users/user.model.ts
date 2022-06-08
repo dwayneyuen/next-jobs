@@ -5,6 +5,9 @@ export class UserModel {
   @Field()
   id: string;
 
+  @Field({ nullable: true })
+  baseUrl: string | null;
+
   @Field()
   email: string;
 

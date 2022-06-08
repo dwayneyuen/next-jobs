@@ -1,4 +1,4 @@
-import { JobQueue, RepeatableJob } from "@dwayneyuen/next-jobs";
+import { JobQueue, ScheduledJob } from "@dwayneyuen/next-jobs";
 import { Logger } from "@nestjs/common";
 import { Command, CommandRunner } from "nest-commander";
 import { glob } from "glob";
@@ -10,7 +10,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 /**
- * Parse the source file and detect when its default export is RepeatableJob,
+ * Parse the source file and detect when its default export is ScheduledJob,
  * JobQueue, or neither
  *
  * @param sourceFile
@@ -24,11 +24,11 @@ export const parseFile = (
     }
   | {
       schedule: string;
-      type: "RepeatableJob";
+      type: "ScheduledJob";
     } => {
   let result = null;
-  const repeatableJobDeclarations = new Map<string, string>();
-  const jobQueueDeclarations = new Set();
+  const scheduledJobDeclarations = new Map<string, string>();
+  const queueDeclarations = new Set();
   ts.forEachChild(sourceFile, (node) => {
     Logger.debug(`node.kind: ${node.kind}`);
     if (ts.isVariableStatement(node)) {
@@ -38,7 +38,7 @@ export const parseFile = (
             if (ts.isIdentifier(declaration.initializer.expression)) {
               if (
                 declaration.initializer.expression.escapedText ===
-                RepeatableJob.name
+                ScheduledJob.name
               ) {
                 Logger.debug(`declaration: ${JSON.stringify(declaration)}`);
                 if (ts.isIdentifier(declaration.name)) {
@@ -46,7 +46,7 @@ export const parseFile = (
                     if (
                       ts.isStringLiteral(declaration.initializer.arguments[0])
                     ) {
-                      repeatableJobDeclarations.set(
+                      scheduledJobDeclarations.set(
                         declaration.name.escapedText.toString(),
                         declaration.initializer.arguments[0].text,
                       );
@@ -57,7 +57,7 @@ export const parseFile = (
                 declaration.initializer.expression.escapedText === JobQueue.name
               ) {
                 if (ts.isIdentifier(declaration.name)) {
-                  jobQueueDeclarations.add(declaration.name.escapedText);
+                  queueDeclarations.add(declaration.name.escapedText);
                 }
               }
             }
@@ -68,14 +68,14 @@ export const parseFile = (
       if (ts.isCallExpression(node.expression)) {
         // Default export declared inline
         if (ts.isIdentifier(node.expression.expression)) {
-          if (node.expression.expression.escapedText === RepeatableJob.name) {
+          if (node.expression.expression.escapedText === ScheduledJob.name) {
             Logger.debug(
               `expression: ${JSON.stringify(node.expression.expression)}`,
             );
             if (node.expression.arguments.length > 0) {
               if (ts.isStringLiteral(node.expression.arguments[0])) {
                 result = {
-                  type: RepeatableJob.name,
+                  type: ScheduledJob.name,
                   schedule: node.expression.arguments[0].text,
                 };
               }
@@ -86,14 +86,14 @@ export const parseFile = (
         }
       } else if (ts.isIdentifier(node.expression)) {
         // Default export declared earlier, match escapedText to previous declaration
-        if (jobQueueDeclarations.has(node.expression.escapedText)) {
+        if (queueDeclarations.has(node.expression.escapedText)) {
           result = { type: JobQueue.name };
         } else if (
-          repeatableJobDeclarations.has(node.expression.escapedText.toString())
+          scheduledJobDeclarations.has(node.expression.escapedText.toString())
         ) {
           result = {
-            type: RepeatableJob.name,
-            schedule: repeatableJobDeclarations.get(
+            type: ScheduledJob.name,
+            schedule: scheduledJobDeclarations.get(
               node.expression.escapedText.toString(),
             ),
           };
@@ -132,7 +132,7 @@ export class DeployCommand implements CommandRunner {
     for (const file of files) {
       const sourceFile = program.getSourceFile(file);
       const result = parseFile(sourceFile);
-      if (result?.type === "RepeatableJob") {
+      if (result?.type === "ScheduledJob") {
         const name = parse(file).name;
         const schedule = result.schedule;
         const path = join(relative(baseDirectory, dirname(file)), name);
