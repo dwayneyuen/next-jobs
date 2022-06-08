@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "bin": {
-    "next-jobs": "./dist/main.js"
+    "next-jobs-cli": "./dist/main.js"
   },
   "scripts": {
     "prebuild": "rimraf dist",

@@ -22,7 +22,6 @@ function ScheduledJob<T>(
   schedule: string,
   callback: ScheduledJobCallbackType
 ): NextApiHandler {
-  let initialized = false;
   const jobName = __filename
     .replace(__dirname, "")
     .replace(/^\//g, "")
