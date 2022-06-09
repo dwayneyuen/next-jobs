@@ -12,6 +12,8 @@ import { HttpService } from "@nestjs/axios";
 import IORedis from "ioredis";
 import { Job, Queue, QueueScheduler, Worker } from "bullmq";
 import { EnvironmentVariables } from "src/environment-variables";
+import { JOBS, QUEUES } from "src/constants";
+import { lastValueFrom } from "rxjs";
 
 export enum Result {
   SUCCESS,
@@ -23,10 +25,6 @@ export enum Result {
 registerEnumType(Result, {
   name: "Result",
 });
-
-export const JOBS = "jobs";
-export const QUEUES = "queues";
-export const WORKERS = "workers";
 
 @InputType()
 class CreateQueueDto {
@@ -46,18 +44,6 @@ class CreateScheduledJobDto {
   schedule: string;
 }
 
-const getKeys = (map: Map<any, any>) => {
-  const result = [];
-  for (const key of map.keys()) {
-    result.push(key);
-  }
-  return result;
-};
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 /**
  * Catch-all resolver for the next-jobs server
  */
@@ -68,6 +54,7 @@ export class ServerResolver {
     private httpService: HttpService,
     private ioRedis: IORedis,
   ) {
+    this.logger.log("Initializing schedulers");
     this.queueSchedulers.set(
       QUEUES,
       new QueueScheduler(QUEUES, { connection: this.ioRedis }),
@@ -80,8 +67,18 @@ export class ServerResolver {
       QUEUES,
       new Worker(
         QUEUES,
-        async (job: Job) => {
-          this.logger.debug(`Processing queue job: ${JSON.stringify(job)}`);
+        async (job: Job<{ data: string; path: string }>) => {
+          this.logger.debug(
+            `Processing queue job: ${job.queueName}, data: ${JSON.stringify(
+              job.data,
+            )}`,
+          );
+          await lastValueFrom(
+            this.httpService.post(
+              `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
+              { data: job.data.data },
+            ),
+          );
         },
         { concurrency: 100, connection: this.ioRedis },
       ),
@@ -90,9 +87,15 @@ export class ServerResolver {
       JOBS,
       new Worker(
         JOBS,
-        async (job: Job) => {
+        async (job: Job<{ path: string }>) => {
           this.logger.debug(`Processing scheduled job: ${JSON.stringify(job)}`);
+          await lastValueFrom(
+            this.httpService.post(
+              `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
+            ),
+          );
         },
+
         { concurrency: 100, connection: this.ioRedis },
       ),
     );
@@ -125,7 +128,7 @@ export class ServerResolver {
     this.logger.debug(
       `accessToken: ${accessToken}, queues: ${JSON.stringify(queues)}`,
     );
-    if (this.environmentVariables.NEXT_JOBS_SELF_HOSTED) {
+    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN) {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
         return Result.INVALID_TOKEN;
       }
@@ -161,7 +164,7 @@ export class ServerResolver {
     this.logger.debug(
       `accessToken: ${accessToken}, jobs: ${JSON.stringify(jobs)}`,
     );
-    if (this.environmentVariables.NEXT_JOBS_SELF_HOSTED) {
+    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN) {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
         return Result.INVALID_TOKEN;
       }
@@ -194,7 +197,10 @@ export class ServerResolver {
     @Args("queueName") queueName: string,
     @Args("data") data: string,
   ): Promise<Result> {
-    if (this.environmentVariables.NEXT_JOBS_SELF_HOSTED) {
+    this.logger.debug(
+      `accessToken: ${accessToken}, queueName: ${queueName}, data: ${data}, accessToken: ${this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN}`,
+    );
+    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN) {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
         return Result.INVALID_TOKEN;
       }
@@ -209,7 +215,8 @@ export class ServerResolver {
         data,
         path,
       });
+      return Result.SUCCESS;
     }
-    return Result.SUCCESS;
+    return Result.NOT_IMPLEMENTED;
   }
 }

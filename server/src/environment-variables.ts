@@ -13,21 +13,18 @@ import { Injectable } from "@nestjs/common";
  * tokens of all registered users and their registered ase urls.
  *
  * @property NEXT_JOBS_REDIS_URL Used to store jobs and queues
- *
- * @property NEXT_JOBS_SELF_HOSTED Set a value to enable the self-hosting
- * configuration
  */
 @Injectable()
 export class EnvironmentVariables {
   NEXT_JOBS_ACCESS_TOKEN = process.env.NEXT_JOBS_ACCESS_TOKEN;
   NEXT_JOBS_API_URL = process.env.NEXT_JOBS_API_URL;
-  NEXT_JOBS_BASE_URL = process.env.NEXT_JOBS_BASE_URL;
-  NEXT_JOBS_REDIS_HOST = process.env.NEXT_JOBS_REDIS_HOST ?? "localhost";
-  NEXT_JOBS_REDIS_PORT = process.env.NEXT_JOBS_REDIS_PORT
-    ? parseInt(process.env.NEXT_JOBS_REDIS_PORT)
-    : 6379;
+  NEXT_JOBS_BASE_URL =
+    process.env.NEXT_JOBS_BASE_URL ?? "http://localhost:3000";
+  // NEXT_JOBS_REDIS_HOST = process.env.NEXT_JOBS_REDIS_HOST ?? "localhost";
+  // NEXT_JOBS_REDIS_PORT = process.env.NEXT_JOBS_REDIS_PORT
+  //   ? parseInt(process.env.NEXT_JOBS_REDIS_PORT)
+  //   : 6379;
   NEXT_JOBS_REDIS_URL =
     process.env.NEXT_JOBS_REDIS_URL ?? "redis://localhost:6379";
-  NEXT_JOBS_SELF_HOSTED = true;
   NEXT_JOBS_PORT = process.env.PORT ?? 5678;
 }

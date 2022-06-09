@@ -142,14 +142,22 @@ export class DeployCommand implements CommandRunner {
       if (result?.type === "ScheduledJob") {
         const name = parse(file).name;
         const schedule = result.schedule;
-        const path = join(relative(baseDirectory, dirname(file)), name);
+        const path = join(
+          "api/jobs",
+          relative(baseDirectory, dirname(file)),
+          name,
+        );
         Logger.debug(
           `Found scheduled job: name: ${name}, path: ${path}, schedule: ${schedule}`,
         );
         scheduledJobs.push({ name, path, schedule });
       } else if (result?.type === "JobQueue") {
         const name = parse(file).name;
-        const path = join(relative(baseDirectory, dirname(file)), name);
+        const path = join(
+          "api/jobs",
+          relative(baseDirectory, dirname(file)),
+          name,
+        );
         Logger.debug(`Found queue: ${name}, path: ${path}`);
         queues.push({ name, path });
       }

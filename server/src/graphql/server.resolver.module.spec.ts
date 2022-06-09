@@ -1,6 +1,5 @@
 import { randomUUID } from "crypto";
 import { Test } from "@nestjs/testing";
-import { ScheduleModule } from "@nestjs/schedule";
 import { ApolloClient } from "@apollo/client";
 import { HttpService } from "@nestjs/axios";
 import { Result, ServerResolver } from "src/graphql/server.resolver";
@@ -13,7 +12,6 @@ class SelfHostedEnvironmentVariables {
   NEXT_JOBS_API_URL = null;
   NEXT_JOBS_BASE_URL = "base-url";
   NEXT_JOBS_REDIS_URL = "redis://localhost:6379";
-  NEXT_JOBS_SELF_HOSTED = "true";
 }
 
 class ProductionEnvironmentVariables {
@@ -21,7 +19,6 @@ class ProductionEnvironmentVariables {
   NEXT_JOBS_API_URL = "api-url";
   NEXT_JOBS_BASE_URL = null;
   NEXT_JOBS_REDIS_URL = "redis://localhost:6379";
-  NEXT_JOBS_SELF_HOSTED = null;
 }
 
 describe("ResolverModule", () => {
@@ -32,7 +29,6 @@ describe("ResolverModule", () => {
   describe("self-hosting", () => {
     beforeEach(async () => {
       const moduleRef = await Test.createTestingModule({
-        imports: [ScheduleModule.forRoot()],
         providers: [
           {
             provide: EnvironmentVariables,

@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import fetch from "node-fetch";
+import fetch from "cross-fetch";
 import { config } from "dotenv";
 import { EnvironmentVariables } from "src/environment-variables";
 
