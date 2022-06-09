@@ -1,4 +1,4 @@
-import { generateAccessToken } from "./gql-auth.guard";
+import { generateAccessToken } from "./access-token";
 
 describe("generateAccessToken", () => {
   it("should generate a string with length 32", () => {
