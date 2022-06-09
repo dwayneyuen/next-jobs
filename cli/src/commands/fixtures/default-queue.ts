@@ -1,5 +1,5 @@
 import { JobQueue } from "@dwayneyuen/next-jobs";
 
-export default JobQueue((job) => {
+export default JobQueue("default-queue", (job) => {
   console.log(job);
 });

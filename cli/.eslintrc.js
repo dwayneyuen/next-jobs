@@ -8,6 +8,8 @@ module.exports = {
   plugins: ["@typescript-eslint/eslint-plugin"],
   extends: [
     "plugin:@typescript-eslint/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
     "plugin:prettier/recommended",
   ],
   root: true,
@@ -17,6 +19,7 @@ module.exports = {
   },
   ignorePatterns: [".eslintrc.js"],
   rules: {
+    "import/order": [2],
     quotes: [1, "double"],
     "@typescript-eslint/interface-name-prefix": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
@@ -28,5 +31,10 @@ module.exports = {
         argsIgnorePattern: "^_",
       },
     ],
+  },
+  settings: {
+    "import/resolver": {
+      typescript: {},
+    },
   },
 };

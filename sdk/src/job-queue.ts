@@ -1,20 +1,17 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
-import { logger } from "./logger";
 import { config } from "dotenv";
+import { gql } from "@apollo/client";
+import { logger } from "./logger";
+import apolloClient from "./apollo-client";
 
 config();
 
 type JobQueueCallbackType<T> = ((job: T) => Promise<void>) | ((job: T) => void);
 
-function JobQueue<T>(
+function JobQueue<T extends Record<string, any>>(
+  queueName: string,
   callback: JobQueueCallbackType<T>
 ): { enqueue(job: T): Promise<void> } & NextApiHandler {
-  const queueName = __filename
-    .replace(__dirname, "")
-    .replace(/^\//g, "")
-    .replace("///g", "-");
-  logger.info(`[JobQueue] created job queue: ${queueName}`);
-
   const nextApiHandler = async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method !== "POST") {
       res.status(405).end();
@@ -30,9 +27,34 @@ function JobQueue<T>(
     res.status(200).end();
   };
 
-  // TODO: Make an API call
-  nextApiHandler.enqueue = async (job: T) => {
-    // await queue.add(queueName, job);
+  nextApiHandler.enqueue = async (data: T) => {
+    const variables = {
+      accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
+      data: JSON.stringify(data),
+      queueName,
+    };
+    logger.info(`variables: ${JSON.stringify(variables)}`);
+    const result = await apolloClient.mutate({
+      mutation: gql`
+        mutation enqueueJob(
+          $accessToken: String!
+          $data: String!
+          $queueName: String!
+        ) {
+          enqueueJob(
+            accessToken: $accessToken
+            data: $data
+            queueName: $queueName
+          )
+        }
+      `,
+      variables: {
+        accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
+        data: JSON.stringify(data),
+        queueName,
+      },
+    });
+    logger.debug(`Enqueue job result: ${result.data}`);
   };
 
   return nextApiHandler;

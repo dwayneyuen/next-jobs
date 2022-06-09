@@ -23,6 +23,9 @@ describe("parseFile", () => {
     const result = parseFile(sourceFile);
 
     expect(result.type).toEqual("JobQueue");
+    if (result.type === "JobQueue") {
+      expect(result.name).toEqual("default-queue");
+    }
   });
 
   it("Given a JobQueue declared and later exported as default, when calling parseFile, then should return JobQueue", () => {
@@ -33,6 +36,9 @@ describe("parseFile", () => {
     const result = parseFile(sourceFile);
 
     expect(result.type).toEqual("JobQueue");
+    if (result.type === "JobQueue") {
+      expect(result.name).toEqual("queue");
+    }
   });
 
   it.skip("Given a JobQueue exported as default from an object, when calling parseFile, then should return JobQueue", () => {
@@ -43,6 +49,9 @@ describe("parseFile", () => {
     const result = parseFile(sourceFile);
 
     expect(result.type).toEqual("JobQueue");
+    if (result.type === "JobQueue") {
+      expect(result.name).toEqual("object-queue");
+    }
   });
 
   it.skip("Given a JobQueue exported as default from an array, when calling parseFile, then should return JobQueue", () => {
@@ -53,6 +62,9 @@ describe("parseFile", () => {
     const result = parseFile(sourceFile);
 
     expect(result.type).toEqual("JobQueue");
+    if (result.type === "JobQueue") {
+      expect(result.name).toEqual("array-queue");
+    }
   });
 
   it.skip("Given a JobQueue imported from another file, when calling parseFile, then should return JobQueue", () => {
@@ -60,7 +72,7 @@ describe("parseFile", () => {
   });
 
   it("Given a ScheduledJob as the default export, when calling parseFile, then should return ScheduledJob", () => {
-    const filename = `${__dirname}/fixtures/default-scheduled.ts`;
+    const filename = `${__dirname}/fixtures/default-scheduled-job.ts`;
     const program = ts.createProgram({ options: {}, rootNames: [filename] });
     const sourceFile = program.getSourceFile(filename);
 
@@ -73,7 +85,7 @@ describe("parseFile", () => {
   });
 
   it("Given a ScheduledJob declared and later exported as default, when calling parseFile, then should return ScheduledJob", () => {
-    const filename = `${__dirname}/fixtures/scheduled.ts`;
+    const filename = `${__dirname}/fixtures/scheduled-job.ts`;
     const program = ts.createProgram({ options: {}, rootNames: [filename] });
     const sourceFile = program.getSourceFile(filename);
 
@@ -86,7 +98,7 @@ describe("parseFile", () => {
   });
 
   it.skip("Given a ScheduledJob exported as default from an object, when calling parseFile, then should return ScheduledJob", () => {
-    const filename = `${__dirname}/fixtures/object-scheduled.ts`;
+    const filename = `${__dirname}/fixtures/object-scheduled-job.ts`;
     const program = ts.createProgram({ options: {}, rootNames: [filename] });
     const sourceFile = program.getSourceFile(filename);
 
@@ -96,7 +108,7 @@ describe("parseFile", () => {
   });
 
   it.skip("Given a ScheduledJob exported as default from an array, when calling parseFile, then should return ScheduledJob", () => {
-    const filename = `${__dirname}/fixtures/array-scheduled.ts`;
+    const filename = `${__dirname}/fixtures/array-scheduled-job.ts`;
     const program = ts.createProgram({ options: {}, rootNames: [filename] });
     const sourceFile = program.getSourceFile(filename);
 

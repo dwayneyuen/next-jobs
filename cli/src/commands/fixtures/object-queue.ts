@@ -1,7 +1,7 @@
 import { JobQueue } from "@dwayneyuen/next-jobs";
 
 const foo = {
-  QueueExample: JobQueue((job) => {
+  QueueExample: JobQueue("object-queue", (job) => {
     console.log(job);
   }),
 };

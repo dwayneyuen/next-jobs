@@ -1,9 +1,9 @@
+import { dirname, join, parse, relative } from "path";
 import { JobQueue, ScheduledJob } from "@dwayneyuen/next-jobs";
 import { Logger } from "@nestjs/common";
 import { Command, CommandRunner } from "nest-commander";
 import { glob } from "glob";
 import * as ts from "typescript";
-import { dirname, join, parse, relative } from "path";
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import * as dotenv from "dotenv";
 
@@ -20,6 +20,7 @@ export const parseFile = (
 ):
   | null
   | {
+      name: string;
       type: "JobQueue";
     }
   | {
@@ -28,7 +29,7 @@ export const parseFile = (
     } => {
   let result = null;
   const scheduledJobDeclarations = new Map<string, string>();
-  const queueDeclarations = new Set();
+  const queueDeclarations = new Map<string, string>();
   ts.forEachChild(sourceFile, (node) => {
     Logger.debug(`node.kind: ${node.kind}`);
     if (ts.isVariableStatement(node)) {
@@ -36,28 +37,29 @@ export const parseFile = (
         if (ts.isVariableDeclaration(declaration)) {
           if (ts.isCallExpression(declaration.initializer)) {
             if (ts.isIdentifier(declaration.initializer.expression)) {
-              if (
-                declaration.initializer.expression.escapedText ===
-                ScheduledJob.name
-              ) {
-                Logger.debug(`declaration: ${JSON.stringify(declaration)}`);
-                if (ts.isIdentifier(declaration.name)) {
-                  if (declaration.initializer.arguments.length > 0) {
+              if (ts.isIdentifier(declaration.name)) {
+                if (declaration.initializer.arguments.length > 0) {
+                  if (
+                    ts.isStringLiteral(declaration.initializer.arguments[0])
+                  ) {
                     if (
-                      ts.isStringLiteral(declaration.initializer.arguments[0])
+                      declaration.initializer.expression.escapedText ===
+                      ScheduledJob.name
                     ) {
                       scheduledJobDeclarations.set(
                         declaration.name.escapedText.toString(),
                         declaration.initializer.arguments[0].text,
                       );
+                    } else if (
+                      declaration.initializer.expression.escapedText ===
+                      JobQueue.name
+                    ) {
+                      queueDeclarations.set(
+                        declaration.name.escapedText.toString(),
+                        declaration.initializer.arguments[0].text,
+                      );
                     }
                   }
-                }
-              } else if (
-                declaration.initializer.expression.escapedText === JobQueue.name
-              ) {
-                if (ts.isIdentifier(declaration.name)) {
-                  queueDeclarations.add(declaration.name.escapedText);
                 }
               }
             }
@@ -68,34 +70,38 @@ export const parseFile = (
       if (ts.isCallExpression(node.expression)) {
         // Default export declared inline
         if (ts.isIdentifier(node.expression.expression)) {
-          if (node.expression.expression.escapedText === ScheduledJob.name) {
-            Logger.debug(
-              `expression: ${JSON.stringify(node.expression.expression)}`,
-            );
-            if (node.expression.arguments.length > 0) {
-              if (ts.isStringLiteral(node.expression.arguments[0])) {
+          if (node.expression.arguments.length > 0) {
+            if (ts.isStringLiteral(node.expression.arguments[0])) {
+              if (
+                node.expression.expression.escapedText === ScheduledJob.name
+              ) {
                 result = {
                   type: ScheduledJob.name,
                   schedule: node.expression.arguments[0].text,
                 };
+              } else if (
+                node.expression.expression.escapedText === JobQueue.name
+              ) {
+                result = {
+                  type: JobQueue.name,
+                  schedule: node.expression.arguments[0].text,
+                };
               }
             }
-          } else if (node.expression.expression.escapedText === JobQueue.name) {
-            result = { type: JobQueue.name };
           }
         }
       } else if (ts.isIdentifier(node.expression)) {
         // Default export declared earlier, match escapedText to previous declaration
-        if (queueDeclarations.has(node.expression.escapedText)) {
-          result = { type: JobQueue.name };
-        } else if (
-          scheduledJobDeclarations.has(node.expression.escapedText.toString())
-        ) {
+        const exportName = node.expression.escapedText.toString();
+        if (queueDeclarations.has(exportName)) {
+          result = {
+            name: queueDeclarations.get(exportName),
+            type: JobQueue.name,
+          };
+        } else if (scheduledJobDeclarations.has(exportName)) {
           result = {
             type: ScheduledJob.name,
-            schedule: scheduledJobDeclarations.get(
-              node.expression.escapedText.toString(),
-            ),
+            schedule: scheduledJobDeclarations.get(exportName),
           };
         }
       }
@@ -120,6 +126,7 @@ export class DeployCommand implements CommandRunner {
       Logger.error("No deploy path!");
       return;
     }
+    // TODO: Also support `src/pages` as a fallback
     const baseDirectory = `${passedParams[0]}/pages/api/jobs`;
     const scheduledJobs: { name: string; path: string; schedule: string }[] =
       [];

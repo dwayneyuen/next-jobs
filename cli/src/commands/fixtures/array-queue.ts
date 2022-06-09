@@ -1,7 +1,7 @@
 import { JobQueue } from "@dwayneyuen/next-jobs";
 
 const foo = [
-  JobQueue((job) => {
+  JobQueue("array-queue", (job) => {
     console.log(job);
   }),
 ];
