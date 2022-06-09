@@ -8,6 +8,14 @@ config();
 
 type JobQueueCallbackType<T> = ((job: T) => Promise<void>) | ((job: T) => void);
 
+/**
+ * TODO: Pull the data out of body before passing to callback, assert that
+ * shape is correct
+ *
+ * @param queueName
+ * @param callback
+ * @constructor
+ */
 function JobQueue<T extends Record<string, any>>(
   queueName: string,
   callback: JobQueueCallbackType<T>
