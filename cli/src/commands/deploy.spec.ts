@@ -120,4 +120,8 @@ describe("parseFile", () => {
   it.skip("Given a ScheduledJob imported from another file, when calling parseFile, then should return ScheduledJob", () => {
     expect(true).toEqual(false);
   });
+
+  it.skip("Given a schedule declared in a variable earlier, when calling parseFile, then should return ScheduledJob", () => {
+    expect(true).toEqual(false);
+  });
 });
