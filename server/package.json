@@ -1,12 +1,11 @@
 {
   "name": "@dwayneyuen/next-jobs-server",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
-  "private": true,
+  "version": "0.0.2",
+  "description": "<p align=\"center\">   <a href=\"http://nestjs.com/\" target=\"blank\"><img src=\"https://nestjs.com/img/logo-small.svg\" width=\"200\" alt=\"Nest Logo\" /></a> </p>",
+  "author": "Dwayne Yuen",
   "license": "UNLICENSED",
   "bin": {
-    "next-jobs-server": "./dist/src/main.js"
+    "next-jobs-server": "dist/src/main.js"
   },
   "scripts": {
     "prebuild": "rimraf dist",
@@ -26,7 +25,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.6.5",
-    "@dwayneyuen/next-jobs": "file:../sdk",
+    "@dwayneyuen/next-jobs": "^0.0.4",
     "@nestjs/apollo": "^10.0.13",
     "@nestjs/axios": "^0.0.8",
     "@nestjs/common": "^8.0.0",
@@ -93,5 +92,9 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "main": ".eslintrc.js",
+  "directories": {
+    "test": "test"
   }
 }
