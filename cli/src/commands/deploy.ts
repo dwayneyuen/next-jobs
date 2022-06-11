@@ -184,11 +184,11 @@ export class DeployCommand implements CommandRunner {
     if (queues.length > 0) {
       await this.apolloClient.mutate({
         mutation: gql`
-          mutation createQueues(
+          mutation createJobQueues(
             $accessToken: String!
             $queues: [CreateQueueDto!]!
           ) {
-            createQueues(accessToken: $accessToken, queues: $queues)
+            createJobQueues(accessToken: $accessToken, queues: $queues)
           }
         `,
         variables: {
