@@ -94,7 +94,11 @@ export class ServerResolver {
               ),
             );
           },
-          { concurrency: 100, connection: this.ioRedis },
+          {
+            concurrency: 10,
+            connection: this.ioRedis,
+            limiter: { max: 10, duration: 30000 },
+          },
         ),
       );
       this.workers.set(
@@ -111,7 +115,11 @@ export class ServerResolver {
               ),
             );
           },
-          { concurrency: 100, connection: this.ioRedis },
+          {
+            concurrency: 10,
+            connection: this.ioRedis,
+            limiter: { max: 10, duration: 30000 },
+          },
         ),
       );
     }
