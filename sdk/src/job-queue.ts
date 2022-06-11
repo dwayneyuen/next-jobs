@@ -9,12 +9,9 @@ config();
 type JobQueueCallbackType<T> = ((job: T) => Promise<void>) | ((job: T) => void);
 
 /**
- * TODO: Pull the data out of body before passing to callback, assert that
- * shape is correct
+ * Implementation of a message queue
  *
- * @param queueName
- * @param callback
- * @constructor
+ * Send messages to this API to process the message
  */
 function JobQueue<T extends Record<string, any>>(
   queueName: string,
@@ -26,22 +23,15 @@ function JobQueue<T extends Record<string, any>>(
       return;
     }
 
-    logger.info(
-      `[JobQueue.${queueName}] called manually with: ${JSON.stringify(
-        req.body
-      )}`
-    );
-    callback(req.body);
-    res.status(200).end();
+    if (req.body.accessToken === process.env.NEXT_JOBS_ACCESS_TOKEN) {
+      await callback(JSON.parse(req.body.data));
+      res.status(200).end();
+    } else {
+      res.status(401).end();
+    }
   };
 
   nextApiHandler.enqueue = async (data: T) => {
-    const variables = {
-      accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
-      data: JSON.stringify(data),
-      queueName,
-    };
-    logger.info(`variables: ${JSON.stringify(variables)}`);
     const result = await apolloClient.mutate({
       mutation: gql`
         mutation enqueueJob(
