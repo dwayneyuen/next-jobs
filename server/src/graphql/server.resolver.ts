@@ -14,6 +14,12 @@ import { Job, Queue, QueueScheduler, Worker } from "bullmq";
 import { lastValueFrom } from "rxjs";
 import { EnvironmentVariables } from "src/environment-variables";
 import { JOBS, QUEUES } from "src/constants";
+import {
+  getCronQueueKey,
+  getJobQueueKey,
+  getJobQueueNamesKey,
+  getJobQueuePathKey,
+} from "src/utils";
 
 export enum Result {
   SUCCESS,
@@ -43,14 +49,6 @@ class CreateScheduledJobDto {
   @Field()
   schedule: string;
 }
-
-const getJobQueueKey = (accessToken: string): string => {
-  return `${QUEUES}-${accessToken}`;
-};
-
-const getCronQueueKey = (accessToken: string): string => {
-  return `${JOBS}-${accessToken}`;
-};
 
 /**
  * Catch-all resolver for the next-jobs server
@@ -90,7 +88,10 @@ export class ServerResolver {
             await lastValueFrom(
               this.httpService.post(
                 `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
-                { data: job.data.data },
+                {
+                  accessToken: this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+                  data: job.data.data,
+                },
               ),
             );
           },
@@ -112,6 +113,9 @@ export class ServerResolver {
             await lastValueFrom(
               this.httpService.post(
                 `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
+                {
+                  accessToken: this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+                },
               ),
             );
           },
@@ -158,18 +162,29 @@ export class ServerResolver {
       }
       // We store all queue names in a redis set, and store a key-value pair
       // for each queue name, mapping queue name to queue path
-      const jobQueueKey = getJobQueueKey(
+      const jobQueueNamesKey = getJobQueueNamesKey(
         this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
       );
-      const existingQueues = await this.ioRedis.smembers(jobQueueKey);
+      const existingQueues = await this.ioRedis.smembers(jobQueueNamesKey);
       for (const queue of existingQueues) {
-        await this.ioRedis.del(queue);
-        await this.ioRedis.srem(jobQueueKey, queue);
+        await this.ioRedis.del(
+          getJobQueuePathKey(
+            this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+            queue,
+          ),
+        );
+        await this.ioRedis.srem(jobQueueNamesKey, queue);
       }
       for (const queue of queues) {
         this.logger.debug(`Adding queue: ${JSON.stringify(queue)}`);
-        await this.ioRedis.sadd(jobQueueKey, queue.name);
-        await this.ioRedis.set(queue.name, queue.path);
+        await this.ioRedis.sadd(jobQueueNamesKey, queue.name);
+        await this.ioRedis.set(
+          getJobQueuePathKey(
+            this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+            queue.name,
+          ),
+          queue.path,
+        );
       }
       return Result.SUCCESS;
     }
@@ -212,6 +227,8 @@ export class ServerResolver {
           { path: job.path },
           { repeat: { cron: job.schedule } },
         );
+        const repeatableJobs = await scheduledJobsQueue.getRepeatableJobs();
+        this.logger.debug(`repeatable jobs: ${repeatableJobs}`);
       }
       return Result.SUCCESS;
     }
@@ -236,10 +253,13 @@ export class ServerResolver {
       if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
         return Result.INVALID_TOKEN;
       }
-      const path = await this.ioRedis.get(queueName);
-      this.logger.debug(
-        `Looking up path for queue name: ${queueName}, path: ${path}`,
+      const path = await this.ioRedis.get(
+        getJobQueuePathKey(
+          this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+          queueName,
+        ),
       );
+      this.logger.debug(`Path for queue name: ${queueName}, path: ${path}`);
       if (!path) {
         return Result.QUEUE_NOT_FOUND;
       }

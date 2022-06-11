@@ -5,7 +5,8 @@ import * as ts from "typescript";
 import { JobQueue, ScheduledJob } from "@dwayneyuen/next-jobs";
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
-import { JOBS, QUEUES } from "src/constants";
+import { getCronQueueKey, getJobQueueKey, getJobQueuePathKey } from "src/utils";
+import { EnvironmentVariables } from "src/environment-variables";
 
 /**
  * Walk the pages directories and look for jobs and register them
@@ -14,7 +15,10 @@ import { JOBS, QUEUES } from "src/constants";
  */
 @Injectable()
 export class ParserService {
-  constructor(private ioRedis: IORedis) {}
+  constructor(
+    private environmentVariables: EnvironmentVariables,
+    private ioRedis: IORedis,
+  ) {}
 
   private logger = new Logger(ParserService.name);
 
@@ -118,9 +122,9 @@ export class ParserService {
     return result;
   };
 
-  async parse(): Promise<void> {
+  async parse(pagesDir: string): Promise<void> {
     // TODO: Refactor into some common module
-    const baseDirectory = `${process.cwd()}/pages/api/jobs`;
+    const baseDirectory = `${process.cwd()}/${pagesDir}/api`;
     const scheduledJobs: { name: string; path: string; schedule: string }[] =
       [];
     const queues: { name: string; path: string }[] = [];
@@ -135,22 +139,14 @@ export class ParserService {
       if (result?.type === "ScheduledJob") {
         const name = parse(file).name;
         const schedule = result.schedule;
-        const path = join(
-          "api/jobs",
-          relative(baseDirectory, dirname(file)),
-          name,
-        );
+        const path = join("api", relative(baseDirectory, dirname(file)), name);
         this.logger.debug(
           `Found scheduled job: name: ${name}, path: ${path}, schedule: ${schedule}`,
         );
         scheduledJobs.push({ name, path, schedule });
       } else if (result?.type === "JobQueue") {
         const name = parse(file).name;
-        const path = join(
-          "api/jobs",
-          relative(baseDirectory, dirname(file)),
-          name,
-        );
+        const path = join("api", relative(baseDirectory, dirname(file)), name);
         this.logger.debug(`Found queue: ${name}, path: ${path}`);
         queues.push({ name, path });
       }
@@ -159,7 +155,12 @@ export class ParserService {
     this.logger.debug(
       `Creating scheduled jobs: ${JSON.stringify(scheduledJobs)}`,
     );
-    const scheduledJobsQueue = new Queue(JOBS, { connection: this.ioRedis });
+    const scheduledJobsQueue = new Queue(
+      getCronQueueKey(this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN),
+      {
+        connection: this.ioRedis,
+      },
+    );
     const repeatableJobs = await scheduledJobsQueue.getRepeatableJobs();
     for (const repeatableJob of repeatableJobs) {
       await scheduledJobsQueue.removeRepeatableByKey(repeatableJob.key);
@@ -179,16 +180,30 @@ export class ParserService {
     this.logger.debug(`Creating queues: ${JSON.stringify(queues)}`);
     // We store all queue names in a redis set, and store a key-value pair
     // for each queue name, mapping queue name to queue path
-    const existingQueues = await this.ioRedis.smembers(QUEUES);
+    const jobQueueKey = getJobQueueKey(
+      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+    );
+    const existingQueues = await this.ioRedis.smembers(jobQueueKey);
     for (const queue of existingQueues) {
-      await this.ioRedis.del(queue);
-      await this.ioRedis.srem(QUEUES, queue);
+      await this.ioRedis.del(
+        getJobQueuePathKey(
+          this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+          queue,
+        ),
+      );
+      await this.ioRedis.srem(jobQueueKey, queue);
     }
     if (queues.length > 0) {
       for (const queue of queues) {
         this.logger.debug(`Adding queue: ${JSON.stringify(queue)}`);
-        await this.ioRedis.sadd(QUEUES, queue.name);
-        await this.ioRedis.set(queue.name, queue.path);
+        await this.ioRedis.sadd(jobQueueKey, queue.name);
+        await this.ioRedis.set(
+          getJobQueuePathKey(
+            this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+            queue.name,
+          ),
+          queue.path,
+        );
       }
     }
     return Promise.resolve(undefined);
