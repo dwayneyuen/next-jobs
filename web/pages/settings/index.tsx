@@ -1,10 +1,11 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { BellIcon, MenuIcon, XIcon } from "@heroicons/react/outline";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import { classNames } from "../class-names";
 import Link from "next/link";
-import { useGetMeQuery } from "../../graphql/generated";
+import BillingDialog from "pages/settings/billing-dialog";
+import { useGetMeQuery } from "graphql/generated";
 
 const user = {
   name: "Tom Cook",
@@ -24,17 +25,10 @@ const userNavigation = [
 
 function Index() {
   const { data, loading } = useGetMeQuery();
+  const [showBillingDialog, setShowBillingDialog] = useState(false);
   console.log("[Settings] data:", data, "loading:", loading);
   return (
     <>
-      {/*
-        This example requires updating your template:
-
-        ```
-        <html class="h-full">
-        <body class="h-full">
-        ```
-      */}
       <div className="min-h-full">
         <Disclosure as="nav" className="bg-white border-b border-gray-200">
           {({ open }) => (
@@ -225,14 +219,14 @@ function Index() {
                           <span className="flex-grow">
                             {data?.getMe?.email}
                           </span>
-                          <span className="ml-4 flex-shrink-0">
-                            <button
-                              type="button"
-                              className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            >
-                              Update
-                            </button>
-                          </span>
+                          {/*<span className="ml-4 flex-shrink-0">*/}
+                          {/*  <button*/}
+                          {/*    type="button"*/}
+                          {/*    className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"*/}
+                          {/*  >*/}
+                          {/*    Update*/}
+                          {/*  </button>*/}
+                          {/*</span>*/}
                         </dd>
                       </div>
                       <div className="py-4 sm:grid sm:py-5 sm:grid-cols-3 sm:gap-4">
@@ -248,6 +242,14 @@ function Index() {
                               type="button"
                               className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
+                              Show / Hide
+                            </button>
+                          </span>
+                          <span className="ml-4 flex-shrink-0">
+                            <button
+                              type="button"
+                              className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
                               Refresh
                             </button>
                           </span>
@@ -255,16 +257,17 @@ function Index() {
                       </div>
                       <div className="py-4 sm:grid sm:py-5 sm:grid-cols-3 sm:gap-4">
                         <dt className="text-sm font-medium text-gray-500">
-                          Subscription status
+                          Billing status
                         </dt>
                         <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span className="flex-grow">PAID</span>
+                          <span className="flex-grow">NOT ACTIVE</span>
                           <span className="ml-4 flex-shrink-0">
                             <button
                               type="button"
                               className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                              onClick={() => setShowBillingDialog(true)}
                             >
-                              Update
+                              Set up
                             </button>
                           </span>
                         </dd>
@@ -387,6 +390,10 @@ function Index() {
                 </>
               </div>
             </div>
+            <BillingDialog
+              open={showBillingDialog}
+              setOpen={setShowBillingDialog}
+            />
           </main>
         </div>
       </div>
