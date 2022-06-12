@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { BellIcon, MenuIcon, XIcon } from "@heroicons/react/outline";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
-import { classNames } from "./class-names";
+import { classNames } from "src/class-names";
 import BlackButton from "../components/BlackButton";
 import { PlusIcon } from "@heroicons/react/solid";
 import Link from "next/link";
