@@ -4,6 +4,7 @@ import { Module } from "@nestjs/common";
 import { GraphQLModule } from "@nestjs/graphql";
 import { AuthModule } from "./auth/auth.module";
 import { GraphqlModule } from "./graphql/graphql.module";
+import { PaypalController } from "src/controllers/paypal/paypal.controller";
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { GraphqlModule } from "./graphql/graphql.module";
     AuthModule,
     GraphqlModule,
   ],
-  controllers: [],
+  controllers: [PaypalController],
   providers: [],
 })
 export class AppModule {}

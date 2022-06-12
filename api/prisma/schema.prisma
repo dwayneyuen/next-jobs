@@ -15,40 +15,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  auth0Sub      String? @unique @map("auth0_sub")
+  authzSub      String? @unique @map("authz_sub")
   accessToken   String  @unique @map("access_token")
   email         String  @unique
   emailVerified Boolean @map("email_verified")
   baseUrl       String? @map("base_url")
 
-  queues        Queue[]
-  scheduledJobs ScheduledJob[]
   @@map("users")
-}
-
-model Queue {
-  id        String   @id @default(uuid()) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  name   String
-  path   String
-  userId String @map("user_id") @db.Uuid
-  user   User   @relation(fields: [userId], references: [id])
-
-  @@map("queues")
-}
-
-model ScheduledJob {
-  id        String   @id @default(uuid()) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  name     String
-  path     String
-  schedule String
-  userId   String @map("user_id") @db.Uuid
-  user     User   @relation(fields: [userId], references: [id])
-
-  @@map("scheduled_jobs")
 }
