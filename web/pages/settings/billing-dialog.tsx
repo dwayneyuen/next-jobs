@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { CheckIcon } from "@heroicons/react/outline";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function BillingDialog({
   open,
@@ -10,14 +11,14 @@ export default function BillingDialog({
   setOpen: (open: boolean) => void;
 }) {
   return (
-    <Transition.Root show={true} as={Fragment}>
+    <Transition.Root show={open} as={Fragment}>
       <Dialog
         as="div"
         className="relative z-10"
         onClose={() => {
           setOpen(false);
         }}
-        open={open}
+        open={true}
       >
         <Transition.Child
           as={Fragment}
@@ -52,10 +53,18 @@ export default function BillingDialog({
                     </Dialog.Title>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
-                        Billing is handled through a Paypal subscription for $20
-                        per month with the first two weeks free. You can cancel
-                        any time.
+                        A subscription to nodecron.io costs $20 per month. Your
+                        first two weeks are free and can be cancelled any time.
                       </p>
+                    </div>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        Billing is handled securely by Paypal - we store none of
+                        your billing information.
+                      </p>
+                    </div>
+                    <div className="mt-4">
+                      <PayPalButtons />
                     </div>
                   </div>
                 </div>
