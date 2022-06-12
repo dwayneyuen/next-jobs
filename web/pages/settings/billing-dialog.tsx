@@ -17,6 +17,7 @@ export default function BillingDialog({
         onClose={() => {
           setOpen(false);
         }}
+        open={open}
       >
         <Transition.Child
           as={Fragment}
