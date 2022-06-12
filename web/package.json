@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate": "graphql-codegen",
-    "prepare": "husky install"
+    "generate": "graphql-codegen"
   },
   "dependencies": {
     "@apollo/client": "^3.6.7",
@@ -38,7 +37,6 @@
     "autoprefixer": "^10.4.7",
     "eslint": "8.16.0",
     "eslint-config-next": "12.1.6",
-    "husky": "^8.0.1",
     "lint-staged": "^13.0.1",
     "postcss": "^8.4.14",
     "prettier": "^2.6.2",
