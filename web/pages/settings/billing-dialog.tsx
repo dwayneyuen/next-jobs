@@ -10,7 +10,7 @@ export default function BillingDialog({
   setOpen: (open: boolean) => void;
 }) {
   return (
-    <Transition.Root show={open} as={Fragment}>
+    <Transition.Root show={true} as={Fragment}>
       <Dialog
         as="div"
         className="relative z-10"
