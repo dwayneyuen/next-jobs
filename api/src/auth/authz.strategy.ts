@@ -7,7 +7,7 @@ import * as hkdf from "futoin-hkdf";
 import * as dotenv from "dotenv";
 import { UserService } from "../prisma/user.service";
 import { generateAccessToken } from "src/access-token";
-import { Auth0Session } from "src/authz-session";
+import { Auth0Session } from "src/auth/authz-session";
 
 const BYTE_LENGTH = 32;
 const ENCRYPTION_INFO = "JWE CEK";

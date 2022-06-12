@@ -14,6 +14,7 @@ type User = {
   email_verified: boolean;
   sub: string;
 };
+
 export type Auth0Session = {
   user: User;
   idToken: string;
