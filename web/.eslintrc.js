@@ -1,5 +1,5 @@
 module.exports = {
-  ignorePatterns: [".eslintrc.js"],
+  ignorePatterns: [".eslintrc.js", "next.config.js"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: "tsconfig.json",

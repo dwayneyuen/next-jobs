@@ -2,10 +2,10 @@ import { Fragment, useState } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { BellIcon, MenuIcon, XIcon } from "@heroicons/react/outline";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
-import { classNames } from "src/class-names";
 import Link from "next/link";
-import BillingDialog from "pages/settings/billing-dialog";
+import { classNames } from "lib/class-names";
 import { useGetMeQuery } from "graphql/generated";
+import BillingDialog from "pages/settings/billing-dialog";
 
 const user = {
   name: "Tom Cook",
@@ -39,7 +39,7 @@ function Index() {
                     <div className="flex-shrink-0 flex items-center">
                       <img
                         className="block h-8 w-auto"
-                        src="/black-logo.svg"
+                        src="black-logo.svg"
                         alt="Logo"
                       />
                     </div>

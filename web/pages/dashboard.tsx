@@ -2,10 +2,10 @@ import { Fragment } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { BellIcon, MenuIcon, XIcon } from "@heroicons/react/outline";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
-import { classNames } from "src/class-names";
-import BlackButton from "../components/BlackButton";
 import { PlusIcon } from "@heroicons/react/solid";
 import Link from "next/link";
+import { classNames } from "lib/class-names";
+import BlackButton from "components/BlackButton";
 
 const user = {
   name: "Tom Cook",
@@ -44,7 +44,7 @@ function Dashboard() {
                     <div className="flex-shrink-0 flex items-center">
                       <img
                         className="block h-8 w-auto"
-                        src="/black-logo.svg"
+                        src="/web/public/black-logo.svg"
                         alt="Logo"
                       />
                     </div>
