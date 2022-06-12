@@ -5,7 +5,7 @@ import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import Link from "next/link";
 import { classNames } from "lib/class-names";
 import { useGetMeQuery } from "graphql/generated";
-import BillingDialog from "pages/settings/billing-dialog";
+import BillingDialog from "components/billing-dialog";
 
 const user = {
   name: "Tom Cook",
@@ -391,8 +391,8 @@ function Index() {
               </div>
             </div>
             <BillingDialog
-              open={showBillingDialog}
-              setOpen={setShowBillingDialog}
+              foo={showBillingDialog}
+              // setOpen={setShowBillingDialog}
             />
           </main>
         </div>

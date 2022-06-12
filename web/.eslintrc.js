@@ -9,7 +9,7 @@ module.exports = {
   extends: ["next/core-web-vitals"],
   plugins: ["@typescript-eslint/eslint-plugin"],
   rules: {
-    "@next/next/no-html-link-for-pages": ["error", "web/pages/"],
+    "@next/next/no-html-link-for-pages": ["error", "pages/"],
     "@next/next/no-img-element": 0,
     "@typescript-eslint/no-unused-vars": [
       "warn",

@@ -1,25 +1,14 @@
-import { Fragment } from "react";
+/* This example requires Tailwind CSS v2.0+ */
+import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { CheckIcon } from "@heroicons/react/outline";
-import { PayPalButtons } from "@paypal/react-paypal-js";
 
-export default function BillingDialog({
-  open,
-  setOpen,
-}: {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}) {
+export default function Modal({ foo }: { foo: boolean }) {
+  const [open, setOpen] = useState(true);
+
   return (
-    <Transition.Root show={open} as={Fragment}>
-      <Dialog
-        as="div"
-        className="relative z-10"
-        onClose={() => {
-          setOpen(false);
-        }}
-        open={true}
-      >
+    <Transition.Root show={foo} as={Fragment}>
+      <Dialog as="div" className="relative z-10" onClose={setOpen}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -31,6 +20,7 @@ export default function BillingDialog({
         >
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
         </Transition.Child>
+
         <div className="fixed z-10 inset-0 overflow-y-auto">
           <div className="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
             <Transition.Child
@@ -44,32 +34,7 @@ export default function BillingDialog({
             >
               <Dialog.Panel className="relative bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-sm sm:w-full sm:p-6">
                 <div>
-                  <div className="mt-3 text-center sm:mt-5">
-                    <Dialog.Title
-                      as="h3"
-                      className="text-lg leading-6 font-medium text-gray-900"
-                    >
-                      Set up billing
-                    </Dialog.Title>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        A subscription to nodecron.io costs $20 per month. Your
-                        first two weeks are free and can be cancelled any time.
-                      </p>
-                    </div>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Billing is handled securely by Paypal - we store none of
-                        your billing information.
-                      </p>
-                    </div>
-                    <div className="mt-4">
-                      <PayPalButtons />
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="mt-3 mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
                     <CheckIcon
                       className="h-6 w-6 text-green-600"
                       aria-hidden="true"
