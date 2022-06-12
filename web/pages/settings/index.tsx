@@ -391,8 +391,8 @@ function Index() {
               </div>
             </div>
             <BillingDialog
-              foo={showBillingDialog}
-              // setOpen={setShowBillingDialog}
+              open={showBillingDialog}
+              setOpen={setShowBillingDialog}
             />
           </main>
         </div>

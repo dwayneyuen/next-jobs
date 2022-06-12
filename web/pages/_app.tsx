@@ -11,8 +11,8 @@ function MyApp({ Component, pageProps }: AppProps) {
       <ApolloProvider client={apolloClient}>
         <PayPalScriptProvider
           options={{
-            "client-id":
-              "AXo1KsJAOBvmZG_zhXCm344rKVHLpxtGuIYQDz0UjFfRA1sMu15Ft-IXjyPmDvcrpkdw0MpkXCiWU5Ms",
+            "client-id": process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
+            vault: true,
           }}
         >
           <Component {...pageProps} />
