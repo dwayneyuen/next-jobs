@@ -18,6 +18,6 @@ export class UsersResolver {
   @UseGuards(GqlAuthGuard)
   @Query(() => UserModel, { nullable: true })
   async getMe(@CurrentSession() session: Auth0Session) {
-    return this.userService.user({ email: session.user.email });
+    return await this.userService.user({ email: session.user.email });
   }
 }

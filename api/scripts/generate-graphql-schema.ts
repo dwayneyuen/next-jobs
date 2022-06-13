@@ -7,13 +7,17 @@ import {
 import { NestFactory } from "@nestjs/core";
 import { printSchema } from "graphql";
 import { UsersResolver } from "src/graphql/users/users.resolver";
+import { PaypalSubscriptionResolver } from "src/graphql/paypal/paypal-subscription.resolver";
 
 async function generateSchema(): Promise<string> {
   const app = await NestFactory.create(GraphQLSchemaBuilderModule);
   await app.init();
 
   const gqlSchemaFactory = app.get(GraphQLSchemaFactory);
-  const schema = await gqlSchemaFactory.create([UsersResolver]);
+  const schema = await gqlSchemaFactory.create([
+    PaypalSubscriptionResolver,
+    UsersResolver,
+  ]);
   return printSchema(schema);
 }
 
