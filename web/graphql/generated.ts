@@ -21,35 +21,116 @@ export type Scalars = {
   Float: number;
 };
 
+export type Mutation = {
+  __typename?: "Mutation";
+  savePaypalSubscription?: Maybe<PaypalSubscriptionModel>;
+};
+
+export type MutationSavePaypalSubscriptionArgs = {
+  planId: Scalars["String"];
+  subscriptionId: Scalars["String"];
+};
+
+export type PaypalSubscriptionModel = {
+  __typename?: "PaypalSubscriptionModel";
+  id: Scalars["String"];
+  planId: Scalars["String"];
+  subscriptionId: Scalars["String"];
+};
+
 export type Query = {
   __typename?: "Query";
-  getMe?: Maybe<User>;
-  getUser?: Maybe<User>;
-  setUser?: Maybe<User>;
+  getMe?: Maybe<UserModel>;
+  getUserByAccessToken?: Maybe<UserModel>;
 };
 
-export type QueryGetUserArgs = {
-  email: Scalars["String"];
-};
-
-export type QuerySetUserArgs = {
-  email: Scalars["String"];
-};
-
-export type User = {
-  __typename?: "User";
+export type QueryGetUserByAccessTokenArgs = {
   accessToken: Scalars["String"];
+};
+
+export type UserModel = {
+  __typename?: "UserModel";
+  accessToken: Scalars["String"];
+  baseUrl?: Maybe<Scalars["String"]>;
   email: Scalars["String"];
   id: Scalars["String"];
+};
+
+export type SavePaypalSubscriptionMutationVariables = Exact<{
+  planId: Scalars["String"];
+  subscriptionId: Scalars["String"];
+}>;
+
+export type SavePaypalSubscriptionMutation = {
+  __typename?: "Mutation";
+  savePaypalSubscription?: {
+    __typename?: "PaypalSubscriptionModel";
+    id: string;
+  } | null;
 };
 
 export type GetMeQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetMeQuery = {
   __typename?: "Query";
-  getMe?: { __typename?: "User"; accessToken: string; email: string } | null;
+  getMe?: {
+    __typename?: "UserModel";
+    accessToken: string;
+    email: string;
+  } | null;
 };
 
+export const SavePaypalSubscriptionDocument = gql`
+  mutation savePaypalSubscription($planId: String!, $subscriptionId: String!) {
+    savePaypalSubscription(planId: $planId, subscriptionId: $subscriptionId) {
+      id
+    }
+  }
+`;
+export type SavePaypalSubscriptionMutationFn = Apollo.MutationFunction<
+  SavePaypalSubscriptionMutation,
+  SavePaypalSubscriptionMutationVariables
+>;
+
+/**
+ * __useSavePaypalSubscriptionMutation__
+ *
+ * To run a mutation, you first call `useSavePaypalSubscriptionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSavePaypalSubscriptionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [savePaypalSubscriptionMutation, { data, loading, error }] = useSavePaypalSubscriptionMutation({
+ *   variables: {
+ *      planId: // value for 'planId'
+ *      subscriptionId: // value for 'subscriptionId'
+ *   },
+ * });
+ */
+export function useSavePaypalSubscriptionMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    SavePaypalSubscriptionMutation,
+    SavePaypalSubscriptionMutationVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    SavePaypalSubscriptionMutation,
+    SavePaypalSubscriptionMutationVariables
+  >(SavePaypalSubscriptionDocument, options);
+}
+export type SavePaypalSubscriptionMutationHookResult = ReturnType<
+  typeof useSavePaypalSubscriptionMutation
+>;
+export type SavePaypalSubscriptionMutationResult =
+  Apollo.MutationResult<SavePaypalSubscriptionMutation>;
+export type SavePaypalSubscriptionMutationOptions = Apollo.BaseMutationOptions<
+  SavePaypalSubscriptionMutation,
+  SavePaypalSubscriptionMutationVariables
+>;
 export const GetMeDocument = gql`
   query getMe {
     getMe {

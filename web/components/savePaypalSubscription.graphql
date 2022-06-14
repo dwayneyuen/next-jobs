@@ -1,0 +1,8 @@
+mutation savePaypalSubscription(
+    $planId: String!,
+    $subscriptionId: String!
+) {
+    savePaypalSubscription(planId: $planId, subscriptionId: $subscriptionId) {
+        id
+    }
+}

@@ -1,7 +1,8 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { CheckIcon } from "@heroicons/react/outline";
 import { PayPalButtons } from "@paypal/react-paypal-js";
+import { useSavePaypalSubscriptionMutation } from "graphql/generated";
 
 export default function BillingDialog({
   open,
@@ -10,6 +11,9 @@ export default function BillingDialog({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
+  const [success, setSuccess] = useState(false);
+  const [savePaypalSubscription, { loading }] =
+    useSavePaypalSubscriptionMutation();
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog
@@ -49,66 +53,75 @@ export default function BillingDialog({
                       as="h3"
                       className="text-lg leading-6 font-medium text-gray-900"
                     >
-                      Set up billing
+                      Subscription to Nextcron.io
                     </Dialog.Title>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
-                        A subscription to nodecron.io costs $20 per month. Your
-                        first two weeks are free and can be cancelled any time.
+                        A subscription to nodecron.io costs <b>$20</b> per
+                        month. Your first <b>two weeks are free</b> and can be
+                        cancelled any time.
                       </p>
                     </div>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
-                        Billing is handled securely by Paypal - we store none of
-                        your billing information.
+                        Billing is handled securely by <b>PayPal</b> - we store
+                        none of your billing information.
                       </p>
                     </div>
-                    <div className="mt-4">
-                      <PayPalButtons
-                        createSubscription={async (data, actions) => {
-                          return actions.subscription.create({
-                            plan_id: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID!,
-                            quantity: "1",
-                          });
-                        }}
-                        onApprove={async (data, actions) => {
-                          console.log(
-                            "[PayPalButtons.onApprove] data:",
-                            data,
-                            "actions:",
-                            actions
-                          );
-                        }}
+                    {!success && (
+                      <div className="mt-4">
+                        <PayPalButtons
+                          createSubscription={async (data, actions) => {
+                            return actions.subscription.create({
+                              plan_id: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID!,
+                              quantity: "1",
+                            });
+                          }}
+                          onApprove={async (data, actions) => {
+                            console.log("subscriptionId:", data.subscriptionID);
+                            if (data.subscriptionID) {
+                              setSuccess(true);
+                              await savePaypalSubscription({
+                                variables: {
+                                  planId:
+                                    process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID!,
+                                  subscriptionId: data.subscriptionID,
+                                },
+                              });
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {success && (
+                  <div>
+                    <div className="mt-3 mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                      <CheckIcon
+                        className="h-6 w-6 text-green-600"
+                        aria-hidden="true"
                       />
                     </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="mt-3 mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                    <CheckIcon
-                      className="h-6 w-6 text-green-600"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-5">
-                    <Dialog.Title
-                      as="h3"
-                      className="text-lg leading-6 font-medium text-gray-900"
-                    >
-                      Payment successful
-                    </Dialog.Title>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                        Consequatur amet labore.
-                      </p>
+                    <div className="mt-3 text-center sm:mt-5">
+                      <Dialog.Title
+                        as="h3"
+                        className="text-lg leading-6 font-medium text-gray-900"
+                      >
+                        Payment successful!
+                      </Dialog.Title>
                     </div>
                   </div>
-                </div>
+                )}
                 <div className="mt-5 sm:mt-6">
                   <button
+                    disabled={loading}
                     type="button"
-                    className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                    className={
+                      loading
+                        ? "cursor-progress inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600/50 text-base font-medium text-white hover:bg-indigo-700/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500/50 sm:text-sm"
+                        : "inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                    }
                     onClick={() => setOpen(false)}
                   >
                     Go back to dashboard

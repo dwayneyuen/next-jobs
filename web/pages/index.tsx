@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { Popover, Transition } from "@headlessui/react";
 import { MenuIcon, XIcon } from "@heroicons/react/outline";
 import { useUser } from "@auth0/nextjs-auth0";
-import BlackButton from "../components/BlackButton";
+import BlackButton from "components/black-button";
 import { useRouter } from "next/router";
 
 const navigation = [

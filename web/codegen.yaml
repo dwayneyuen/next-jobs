@@ -1,5 +1,6 @@
 schema: '../api/src/graphql/schema.graphql'
 documents:
+  - './components/**/*.graphql'
   - './graphql/**/*.graphql'
   - './pages/**/*.graphql'
 generates:

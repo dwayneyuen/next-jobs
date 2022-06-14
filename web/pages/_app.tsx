@@ -11,6 +11,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       <ApolloProvider client={apolloClient}>
         <PayPalScriptProvider
           options={{
+            intent: "subscription",
             "client-id": process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
             vault: true,
           }}

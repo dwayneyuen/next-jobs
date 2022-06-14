@@ -5,7 +5,7 @@ import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import { PlusIcon } from "@heroicons/react/solid";
 import Link from "next/link";
 import { classNames } from "lib/class-names";
-import BlackButton from "components/BlackButton";
+import BlackButton from "components/black-button";
 
 const user = {
   name: "Tom Cook",
@@ -44,7 +44,7 @@ function Dashboard() {
                     <div className="flex-shrink-0 flex items-center">
                       <img
                         className="block h-8 w-auto"
-                        src="/web/public/black-logo.svg"
+                        src="/black-logo.svg"
                         alt="Logo"
                       />
                     </div>

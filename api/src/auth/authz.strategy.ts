@@ -35,7 +35,6 @@ export class AuthzStrategy extends PassportStrategy(Strategy, "authz") {
   async validate(request: Request): Promise<any> {
     const keystore = new JWKS.KeyStore();
     keystore.add(JWK.asKey(encryption(process.env.AUTH0_SECRET)));
-    this.logger.debug(`appSession: ${request.cookies["appSession"]}`);
     let data: Auth0Session;
     if ("appSession" in request.cookies) {
       const { protected: header, cleartext } = JWE.decrypt(
@@ -49,7 +48,7 @@ export class AuthzStrategy extends PassportStrategy(Strategy, "authz") {
       );
       const { exp } = header as { exp: number };
       if (exp <= epoch()) {
-        Logger.log("Expired based on options when it was established");
+        this.logger.debug("Expired based on options when it was established");
         return null;
       }
       data = JSON.parse(cleartext.toString());
@@ -72,16 +71,15 @@ export class AuthzStrategy extends PassportStrategy(Strategy, "authz") {
         })
         .join("");
     }
-    this.logger.debug(`data: ${data}`);
     const existingUser = await this.userService.user({
-      auth0Sub: data.user.sub,
+      authzSub: data.user.sub,
     });
     if (!existingUser) {
       // Because auth0 stores our user data, we have to create a user entry
       // manually once
       await this.userService.createUser({
         accessToken: generateAccessToken(),
-        auth0Sub: data.user.sub,
+        authzSub: data.user.sub,
         email: data.user.email,
         emailVerified: data.user.email_verified,
       });
