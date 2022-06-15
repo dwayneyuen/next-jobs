@@ -1,0 +1,6 @@
+query getSubscriptionStatus {
+    getMe {
+        id
+        subscriptionStatus
+    }
+}

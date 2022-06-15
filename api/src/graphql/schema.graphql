@@ -14,7 +14,16 @@ type PaypalSubscriptionModel {
 
 type Query {
   getMe: UserModel
-  getUserByAccessToken(accessToken: String!): UserModel
+  paypal: Boolean!
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  APPROVAL_PENDING
+  APPROVED
+  CANCELLED
+  EXPIRED
+  SUSPENDED
 }
 
 type UserModel {
@@ -22,4 +31,5 @@ type UserModel {
   baseUrl: String
   email: String!
   id: String!
+  subscriptionStatus: SubscriptionStatus
 }

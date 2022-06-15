@@ -41,12 +41,17 @@ export type PaypalSubscriptionModel = {
 export type Query = {
   __typename?: "Query";
   getMe?: Maybe<UserModel>;
-  getUserByAccessToken?: Maybe<UserModel>;
+  paypal: Scalars["Boolean"];
 };
 
-export type QueryGetUserByAccessTokenArgs = {
-  accessToken: Scalars["String"];
-};
+export enum SubscriptionStatus {
+  Active = "ACTIVE",
+  ApprovalPending = "APPROVAL_PENDING",
+  Approved = "APPROVED",
+  Cancelled = "CANCELLED",
+  Expired = "EXPIRED",
+  Suspended = "SUSPENDED",
+}
 
 export type UserModel = {
   __typename?: "UserModel";
@@ -54,6 +59,7 @@ export type UserModel = {
   baseUrl?: Maybe<Scalars["String"]>;
   email: Scalars["String"];
   id: Scalars["String"];
+  subscriptionStatus?: Maybe<SubscriptionStatus>;
 };
 
 export type SavePaypalSubscriptionMutationVariables = Exact<{
@@ -77,6 +83,20 @@ export type GetMeQuery = {
     __typename?: "UserModel";
     accessToken: string;
     email: string;
+    id: string;
+  } | null;
+};
+
+export type GetSubscriptionStatusQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetSubscriptionStatusQuery = {
+  __typename?: "Query";
+  getMe?: {
+    __typename?: "UserModel";
+    id: string;
+    subscriptionStatus?: SubscriptionStatus | null;
   } | null;
 };
 
@@ -136,6 +156,7 @@ export const GetMeDocument = gql`
     getMe {
       accessToken
       email
+      id
     }
   }
 `;
@@ -178,4 +199,62 @@ export type GetMeLazyQueryHookResult = ReturnType<typeof useGetMeLazyQuery>;
 export type GetMeQueryResult = Apollo.QueryResult<
   GetMeQuery,
   GetMeQueryVariables
+>;
+export const GetSubscriptionStatusDocument = gql`
+  query getSubscriptionStatus {
+    getMe {
+      id
+      subscriptionStatus
+    }
+  }
+`;
+
+/**
+ * __useGetSubscriptionStatusQuery__
+ *
+ * To run a query within a React component, call `useGetSubscriptionStatusQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSubscriptionStatusQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSubscriptionStatusQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetSubscriptionStatusQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    GetSubscriptionStatusQuery,
+    GetSubscriptionStatusQueryVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetSubscriptionStatusQuery,
+    GetSubscriptionStatusQueryVariables
+  >(GetSubscriptionStatusDocument, options);
+}
+export function useGetSubscriptionStatusLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetSubscriptionStatusQuery,
+    GetSubscriptionStatusQueryVariables
+  >
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetSubscriptionStatusQuery,
+    GetSubscriptionStatusQueryVariables
+  >(GetSubscriptionStatusDocument, options);
+}
+export type GetSubscriptionStatusQueryHookResult = ReturnType<
+  typeof useGetSubscriptionStatusQuery
+>;
+export type GetSubscriptionStatusLazyQueryHookResult = ReturnType<
+  typeof useGetSubscriptionStatusLazyQuery
+>;
+export type GetSubscriptionStatusQueryResult = Apollo.QueryResult<
+  GetSubscriptionStatusQuery,
+  GetSubscriptionStatusQueryVariables
 >;

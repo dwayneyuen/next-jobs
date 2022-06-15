@@ -18,5 +18,6 @@ module.exports = {
         varsIgnorePattern: "^_",
       },
     ],
+    "@typescript-eslint/switch-exhaustiveness-check": "error",
   },
 };

@@ -4,7 +4,11 @@ import { BellIcon, MenuIcon, XIcon } from "@heroicons/react/outline";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import Link from "next/link";
 import { classNames } from "lib/class-names";
-import { useGetMeQuery } from "graphql/generated";
+import {
+  SubscriptionStatus,
+  useGetMeQuery,
+  useGetSubscriptionStatusQuery,
+} from "graphql/generated";
 import BillingDialog from "components/billing-dialog";
 
 const user = {
@@ -24,9 +28,67 @@ const userNavigation = [
 ];
 
 function Index() {
-  const { data, loading } = useGetMeQuery();
+  const { data: meData } = useGetMeQuery();
+  const { data: subscriptionStatusData, loading: subscriptionStatusLoading } =
+    useGetSubscriptionStatusQuery();
+
   const [showBillingDialog, setShowBillingDialog] = useState(false);
-  console.log("[Settings] data:", data, "loading:", loading);
+  let billingStatusText = "";
+  let billingStatusColor = "";
+  let showSubscribeButton = false;
+  const subscriptionStatus = subscriptionStatusData?.getMe?.subscriptionStatus;
+  switch (subscriptionStatus) {
+    case undefined: {
+      if (!subscriptionStatusLoading) {
+        billingStatusText = "NOT ACTIVE";
+        billingStatusColor = "text-gray-500";
+        showSubscribeButton = true;
+      }
+      break;
+    }
+    case null: {
+      if (!subscriptionStatusLoading) {
+        billingStatusText = "NOT ACTIVE";
+        billingStatusColor = "text-gray-500";
+        showSubscribeButton = true;
+      }
+      break;
+    }
+    case SubscriptionStatus.Active: {
+      billingStatusText = "ACTIVE";
+      billingStatusColor = "text-green-500";
+      break;
+    }
+    case SubscriptionStatus.ApprovalPending: {
+      billingStatusText = "PENDING";
+      billingStatusColor = "text-yellow-500";
+      break;
+    }
+    case SubscriptionStatus.Approved: {
+      billingStatusText = "ACTIVE";
+      billingStatusColor = "text-green-500";
+      break;
+    }
+    case SubscriptionStatus.Cancelled: {
+      billingStatusText = "CANCELLED";
+      billingStatusColor = "text-red-500";
+      showSubscribeButton = true;
+      break;
+    }
+    case SubscriptionStatus.Expired: {
+      billingStatusText = "EXPIRED";
+      billingStatusColor = "text-red-500";
+      showSubscribeButton = true;
+      break;
+    }
+    case SubscriptionStatus.Suspended: {
+      billingStatusText = "SUSPENDED";
+      billingStatusColor = "text-red-500";
+      showSubscribeButton = true;
+      break;
+    }
+  }
+
   return (
     <>
       <div className="min-h-full">
@@ -39,7 +101,7 @@ function Index() {
                     <div className="flex-shrink-0 flex items-center">
                       <img
                         className="block h-8 w-auto"
-                        src="black-logo.svg"
+                        src="/black-logo.svg"
                         alt="Logo"
                       />
                     </div>
@@ -217,7 +279,7 @@ function Index() {
                         </dt>
                         <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                           <span className="flex-grow">
-                            {data?.getMe?.email}
+                            {meData?.getMe?.email}
                           </span>
                           {/*<span className="ml-4 flex-shrink-0">*/}
                           {/*  <button*/}
@@ -235,7 +297,7 @@ function Index() {
                         </dt>
                         <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                           <span className="flex-grow">
-                            {data?.getMe?.accessToken}
+                            {meData?.getMe?.accessToken}
                           </span>
                           <span className="ml-4 flex-shrink-0">
                             <button
@@ -260,131 +322,22 @@ function Index() {
                           Billing status
                         </dt>
                         <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span className="flex-grow">NOT ACTIVE</span>
+                          <span className={`flex-grow ${billingStatusColor}`}>
+                            {billingStatusText}
+                          </span>
                           <span className="ml-4 flex-shrink-0">
-                            <button
-                              type="button"
-                              className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                              onClick={() => setShowBillingDialog(true)}
-                            >
-                              Set up
-                            </button>
+                            {showSubscribeButton && (
+                              <button
+                                type="button"
+                                className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                onClick={() => setShowBillingDialog(true)}
+                              >
+                                Subscribe
+                              </button>
+                            )}
                           </span>
                         </dd>
                       </div>
-                      {/*<div className="py-4 sm:grid sm:py-5 sm:grid-cols-3 sm:gap-4">*/}
-                      {/*  <dt className="text-sm font-medium text-gray-500">*/}
-                      {/*    Salary expectation*/}
-                      {/*  </dt>*/}
-                      {/*  <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">*/}
-                      {/*    <span className="flex-grow"> $120,000</span>*/}
-                      {/*    <span className="ml-4 flex-shrink-0">*/}
-                      {/*      <button*/}
-                      {/*        type="button"*/}
-                      {/*        className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"*/}
-                      {/*      >*/}
-                      {/*        Update*/}
-                      {/*      </button>*/}
-                      {/*    </span>*/}
-                      {/*  </dd>*/}
-                      {/*</div>*/}
-                      {/*<div className="py-4 sm:grid sm:py-5 sm:grid-cols-3 sm:gap-4">*/}
-                      {/*  <dt className="text-sm font-medium text-gray-500">*/}
-                      {/*    About*/}
-                      {/*  </dt>*/}
-                      {/*  <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">*/}
-                      {/*    <span className="flex-grow">*/}
-                      {/*      Fugiat ipsum ipsum deserunt culpa aute sint do*/}
-                      {/*      nostrud anim incididunt cillum culpa consequat.*/}
-                      {/*      Excepteur qui ipsum aliquip consequat sint. Sit id*/}
-                      {/*      mollit nulla mollit nostrud in ea officia proident.*/}
-                      {/*      Irure nostrud pariatur mollit ad adipisicing*/}
-                      {/*      reprehenderit deserunt qui eu.*/}
-                      {/*    </span>*/}
-                      {/*    <span className="ml-4 flex-shrink-0">*/}
-                      {/*      <button*/}
-                      {/*        type="button"*/}
-                      {/*        className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"*/}
-                      {/*      >*/}
-                      {/*        Update*/}
-                      {/*      </button>*/}
-                      {/*    </span>*/}
-                      {/*  </dd>*/}
-                      {/*</div>*/}
-                      {/*<div className="py-4 sm:grid sm:py-5 sm:grid-cols-3 sm:gap-4">*/}
-                      {/*  <dt className="text-sm font-medium text-gray-500">*/}
-                      {/*    Attachments*/}
-                      {/*  </dt>*/}
-                      {/*  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">*/}
-                      {/*    <ul*/}
-                      {/*      role="list"*/}
-                      {/*      className="border border-gray-200 rounded-md divide-y divide-gray-200"*/}
-                      {/*    >*/}
-                      {/*      <li className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">*/}
-                      {/*        <div className="w-0 flex-1 flex items-center">*/}
-                      {/*          <PaperClipIcon*/}
-                      {/*            className="flex-shrink-0 h-5 w-5 text-gray-400"*/}
-                      {/*            aria-hidden="true"*/}
-                      {/*          />*/}
-                      {/*          <span className="ml-2 flex-1 w-0 truncate">*/}
-                      {/*            resume_back_end_developer.pdf*/}
-                      {/*          </span>*/}
-                      {/*        </div>*/}
-                      {/*        <div className="ml-4 flex-shrink-0 flex space-x-4">*/}
-                      {/*          <button*/}
-                      {/*            type="button"*/}
-                      {/*            className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"*/}
-                      {/*          >*/}
-                      {/*            Update*/}
-                      {/*          </button>*/}
-                      {/*          <span*/}
-                      {/*            className="text-gray-300"*/}
-                      {/*            aria-hidden="true"*/}
-                      {/*          >*/}
-                      {/*            |*/}
-                      {/*          </span>*/}
-                      {/*          <button*/}
-                      {/*            type="button"*/}
-                      {/*            className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"*/}
-                      {/*          >*/}
-                      {/*            Remove*/}
-                      {/*          </button>*/}
-                      {/*        </div>*/}
-                      {/*      </li>*/}
-                      {/*      <li className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">*/}
-                      {/*        <div className="w-0 flex-1 flex items-center">*/}
-                      {/*          <PaperClipIcon*/}
-                      {/*            className="flex-shrink-0 h-5 w-5 text-gray-400"*/}
-                      {/*            aria-hidden="true"*/}
-                      {/*          />*/}
-                      {/*          <span className="ml-2 flex-1 w-0 truncate">*/}
-                      {/*            coverletter_back_end_developer.pdf*/}
-                      {/*          </span>*/}
-                      {/*        </div>*/}
-                      {/*        <div className="ml-4 flex-shrink-0 flex space-x-4">*/}
-                      {/*          <button*/}
-                      {/*            type="button"*/}
-                      {/*            className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"*/}
-                      {/*          >*/}
-                      {/*            Update*/}
-                      {/*          </button>*/}
-                      {/*          <span*/}
-                      {/*            className="text-gray-300"*/}
-                      {/*            aria-hidden="true"*/}
-                      {/*          >*/}
-                      {/*            |*/}
-                      {/*          </span>*/}
-                      {/*          <button*/}
-                      {/*            type="button"*/}
-                      {/*            className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"*/}
-                      {/*          >*/}
-                      {/*            Remove*/}
-                      {/*          </button>*/}
-                      {/*        </div>*/}
-                      {/*      </li>*/}
-                      {/*    </ul>*/}
-                      {/*  </dd>*/}
-                      {/*</div>*/}
                     </dl>
                   </div>
                 </>
