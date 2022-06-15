@@ -31,6 +31,7 @@ module.exports = {
         argsIgnorePattern: "^_",
       },
     ],
+    "@typescript-eslint/switch-exhaustiveness-check": "error",
   },
   settings: {
     "import/resolver": {
