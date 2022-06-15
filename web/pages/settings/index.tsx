@@ -296,9 +296,7 @@ function Index() {
                           Access token
                         </dt>
                         <dd className="mt-1 flex justify-between text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span
-                            className={`${billingStatusColor} bg-slate-300 pl-2 pr-2 rounded`}
-                          >
+                          <span className={"bg-slate-200 pl-2 pr-2 rounded"}>
                             {meData?.getMe?.accessToken}
                           </span>
                           <div>
@@ -327,7 +325,7 @@ function Index() {
                         </dt>
                         <dd className="mt-1 flex justify-between text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                           <span
-                            className={`${billingStatusColor} bg-slate-300 pl-2 pr-2 rounded`}
+                            className={`${billingStatusColor} bg-slate-200 pl-2 pr-2 rounded`}
                           >
                             {billingStatusText}
                           </span>

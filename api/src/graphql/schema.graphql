@@ -3,18 +3,11 @@
 # ------------------------------------------------------
 
 type Mutation {
-  savePaypalSubscription(planId: String!, subscriptionId: String!): PaypalSubscriptionModel
-}
-
-type PaypalSubscriptionModel {
-  id: String!
-  planId: String!
-  subscriptionId: String!
+  updateMe(paypalPlanId: String, paypalSubscriptionId: String): UserModel
 }
 
 type Query {
   getMe: UserModel
-  paypal: Boolean!
 }
 
 enum SubscriptionStatus {
@@ -31,5 +24,7 @@ type UserModel {
   baseUrl: String
   email: String!
   id: String!
+  paypalPlanId: String
+  paypalSubscriptionId: String
   subscriptionStatus: SubscriptionStatus
 }

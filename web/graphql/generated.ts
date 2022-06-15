@@ -23,25 +23,17 @@ export type Scalars = {
 
 export type Mutation = {
   __typename?: "Mutation";
-  savePaypalSubscription?: Maybe<PaypalSubscriptionModel>;
+  updateMe?: Maybe<UserModel>;
 };
 
-export type MutationSavePaypalSubscriptionArgs = {
-  planId: Scalars["String"];
-  subscriptionId: Scalars["String"];
-};
-
-export type PaypalSubscriptionModel = {
-  __typename?: "PaypalSubscriptionModel";
-  id: Scalars["String"];
-  planId: Scalars["String"];
-  subscriptionId: Scalars["String"];
+export type MutationUpdateMeArgs = {
+  paypalPlanId?: InputMaybe<Scalars["String"]>;
+  paypalSubscriptionId?: InputMaybe<Scalars["String"]>;
 };
 
 export type Query = {
   __typename?: "Query";
   getMe?: Maybe<UserModel>;
-  paypal: Scalars["Boolean"];
 };
 
 export enum SubscriptionStatus {
@@ -59,20 +51,19 @@ export type UserModel = {
   baseUrl?: Maybe<Scalars["String"]>;
   email: Scalars["String"];
   id: Scalars["String"];
+  paypalPlanId?: Maybe<Scalars["String"]>;
+  paypalSubscriptionId?: Maybe<Scalars["String"]>;
   subscriptionStatus?: Maybe<SubscriptionStatus>;
 };
 
-export type SavePaypalSubscriptionMutationVariables = Exact<{
-  planId: Scalars["String"];
-  subscriptionId: Scalars["String"];
+export type UpdateMeMutationVariables = Exact<{
+  paypalPlanId?: InputMaybe<Scalars["String"]>;
+  paypalSubscriptionId?: InputMaybe<Scalars["String"]>;
 }>;
 
-export type SavePaypalSubscriptionMutation = {
+export type UpdateMeMutation = {
   __typename?: "Mutation";
-  savePaypalSubscription?: {
-    __typename?: "PaypalSubscriptionModel";
-    id: string;
-  } | null;
+  updateMe?: { __typename?: "UserModel"; id: string } | null;
 };
 
 export type GetMeQueryVariables = Exact<{ [key: string]: never }>;
@@ -100,56 +91,56 @@ export type GetSubscriptionStatusQuery = {
   } | null;
 };
 
-export const SavePaypalSubscriptionDocument = gql`
-  mutation savePaypalSubscription($planId: String!, $subscriptionId: String!) {
-    savePaypalSubscription(planId: $planId, subscriptionId: $subscriptionId) {
+export const UpdateMeDocument = gql`
+  mutation updateMe($paypalPlanId: String, $paypalSubscriptionId: String) {
+    updateMe(
+      paypalPlanId: $paypalPlanId
+      paypalSubscriptionId: $paypalSubscriptionId
+    ) {
       id
     }
   }
 `;
-export type SavePaypalSubscriptionMutationFn = Apollo.MutationFunction<
-  SavePaypalSubscriptionMutation,
-  SavePaypalSubscriptionMutationVariables
+export type UpdateMeMutationFn = Apollo.MutationFunction<
+  UpdateMeMutation,
+  UpdateMeMutationVariables
 >;
 
 /**
- * __useSavePaypalSubscriptionMutation__
+ * __useUpdateMeMutation__
  *
- * To run a mutation, you first call `useSavePaypalSubscriptionMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useSavePaypalSubscriptionMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useUpdateMeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateMeMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [savePaypalSubscriptionMutation, { data, loading, error }] = useSavePaypalSubscriptionMutation({
+ * const [updateMeMutation, { data, loading, error }] = useUpdateMeMutation({
  *   variables: {
- *      planId: // value for 'planId'
- *      subscriptionId: // value for 'subscriptionId'
+ *      paypalPlanId: // value for 'paypalPlanId'
+ *      paypalSubscriptionId: // value for 'paypalSubscriptionId'
  *   },
  * });
  */
-export function useSavePaypalSubscriptionMutation(
+export function useUpdateMeMutation(
   baseOptions?: Apollo.MutationHookOptions<
-    SavePaypalSubscriptionMutation,
-    SavePaypalSubscriptionMutationVariables
+    UpdateMeMutation,
+    UpdateMeMutationVariables
   >
 ) {
   const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useMutation<
-    SavePaypalSubscriptionMutation,
-    SavePaypalSubscriptionMutationVariables
-  >(SavePaypalSubscriptionDocument, options);
+  return Apollo.useMutation<UpdateMeMutation, UpdateMeMutationVariables>(
+    UpdateMeDocument,
+    options
+  );
 }
-export type SavePaypalSubscriptionMutationHookResult = ReturnType<
-  typeof useSavePaypalSubscriptionMutation
->;
-export type SavePaypalSubscriptionMutationResult =
-  Apollo.MutationResult<SavePaypalSubscriptionMutation>;
-export type SavePaypalSubscriptionMutationOptions = Apollo.BaseMutationOptions<
-  SavePaypalSubscriptionMutation,
-  SavePaypalSubscriptionMutationVariables
+export type UpdateMeMutationHookResult = ReturnType<typeof useUpdateMeMutation>;
+export type UpdateMeMutationResult = Apollo.MutationResult<UpdateMeMutation>;
+export type UpdateMeMutationOptions = Apollo.BaseMutationOptions<
+  UpdateMeMutation,
+  UpdateMeMutationVariables
 >;
 export const GetMeDocument = gql`
   query getMe {

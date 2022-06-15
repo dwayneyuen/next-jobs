@@ -2,7 +2,11 @@ import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { CheckIcon } from "@heroicons/react/outline";
 import { PayPalButtons } from "@paypal/react-paypal-js";
-import { useSavePaypalSubscriptionMutation } from "graphql/generated";
+import {
+  GetMeDocument,
+  GetSubscriptionStatusDocument,
+  useUpdateMeMutation,
+} from "graphql/generated";
 
 export default function BillingDialog({
   open,
@@ -12,8 +16,9 @@ export default function BillingDialog({
   setOpen: (open: boolean) => void;
 }) {
   const [success, setSuccess] = useState(false);
-  const [savePaypalSubscription, { loading }] =
-    useSavePaypalSubscriptionMutation();
+  const [updateMe, { loading }] = useUpdateMeMutation({
+    refetchQueries: [GetMeDocument, GetSubscriptionStatusDocument],
+  });
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog
@@ -77,15 +82,14 @@ export default function BillingDialog({
                               quantity: "1",
                             });
                           }}
-                          onApprove={async (data, actions) => {
-                            console.log("subscriptionId:", data.subscriptionID);
+                          onApprove={async (data) => {
                             if (data.subscriptionID) {
                               setSuccess(true);
-                              await savePaypalSubscription({
+                              await updateMe({
                                 variables: {
-                                  planId:
+                                  paypalPlanId:
                                     process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID!,
-                                  subscriptionId: data.subscriptionID,
+                                  paypalSubscriptionId: data.subscriptionID,
                                 },
                               });
                             }

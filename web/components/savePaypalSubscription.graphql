@@ -1,8 +1,8 @@
-mutation savePaypalSubscription(
-    $planId: String!,
-    $subscriptionId: String!
+mutation updateMe(
+    $paypalPlanId: String,
+    $paypalSubscriptionId: String
 ) {
-    savePaypalSubscription(planId: $planId, subscriptionId: $subscriptionId) {
+    updateMe(paypalPlanId: $paypalPlanId, paypalSubscriptionId: $paypalSubscriptionId) {
         id
     }
 }

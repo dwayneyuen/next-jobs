@@ -3,7 +3,7 @@ import { Field, ObjectType } from "@nestjs/graphql";
 @ObjectType()
 export class UserModel {
   @Field()
-  id: string;
+  accessToken: string;
 
   @Field({ nullable: true })
   baseUrl: string | null;
@@ -12,5 +12,11 @@ export class UserModel {
   email: string;
 
   @Field()
-  accessToken: string;
+  id: string;
+
+  @Field({ nullable: true })
+  paypalSubscriptionId: string;
+
+  @Field({ nullable: true })
+  paypalPlanId: string;
 }
