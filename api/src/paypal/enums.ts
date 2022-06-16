@@ -6,8 +6,3 @@ export enum SubscriptionStatus {
   CANCELLED = "CANCELLED", // The subscription is cancelled.
   EXPIRED = "EXPIRED", // The subscription is expired.
 }
-
-export class GetSubscriptionDetailsResponse {
-  plan_id: string;
-  status: SubscriptionStatus;
-}

@@ -14,7 +14,8 @@ import { UserService } from "src/prisma/user.service";
 import { CurrentSession } from "src/graphql/decorators/current-session";
 import { Auth0Session } from "src/auth/authz-session";
 import { PaypalClient } from "src/paypal/paypal-client";
-import { SubscriptionStatus } from "src/paypal/get-subscription-details-response";
+import { SubscriptionStatus } from "src/paypal/enums";
+import { PlanService } from "src/prisma/plan.service";
 
 registerEnumType(SubscriptionStatus, { name: "SubscriptionStatus" });
 
@@ -22,6 +23,7 @@ registerEnumType(SubscriptionStatus, { name: "SubscriptionStatus" });
 export class UsersResolver {
   constructor(
     private paypalClient: PaypalClient,
+    private planService: PlanService,
     private userService: UserService,
   ) {}
 
@@ -49,11 +51,10 @@ export class UsersResolver {
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => UserModel, { nullable: true })
-  async updateMe(
+  async savePaypalSubscription(
     @CurrentSession() session: Auth0Session,
-    @Args("paypalPlanId", { nullable: true }) paypalPlanId: string | null,
-    @Args("paypalSubscriptionId", { nullable: true })
-    paypalSubscriptionId: string | null,
+    @Args("paypalPlanId") paypalPlanId: string,
+    @Args("paypalSubscriptionId") paypalSubscriptionId: string,
   ) {
     this.logger.log(
       `email: ${session.user.email}, paypalPlan: ${paypalPlanId}, subscription: ${paypalSubscriptionId}`,
@@ -63,8 +64,8 @@ export class UsersResolver {
         email: session.user.email,
       },
       data: {
-        paypalSubscriptionId: paypalSubscriptionId ?? undefined,
-        paypalPlanId: paypalPlanId ?? undefined,
+        paypalSubscriptionId,
+        plan: { connect: { id: paypalPlanId } },
       },
     });
   }

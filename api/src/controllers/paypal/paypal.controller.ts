@@ -10,7 +10,7 @@ export class PaypalController {
 
   @Post()
   webhook(@Req() request: Request): string {
-    this.logger.log(`Request body: ${request.body}`);
+    this.logger.log(`Request body: ${JSON.stringify(request.body)}`);
     return "hello world";
   }
 }

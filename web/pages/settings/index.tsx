@@ -263,14 +263,6 @@ function Index() {
             <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
               <div className="py-8 sm:px-0">
                 <>
-                  {/*<div>*/}
-                  {/*  <h3 className="text-lg leading-6 font-medium text-gray-900">*/}
-                  {/*    Applicant Information*/}
-                  {/*  </h3>*/}
-                  {/*  <p className="mt-1 max-w-2xl text-sm text-gray-500">*/}
-                  {/*    Personal details and application.*/}
-                  {/*  </p>*/}
-                  {/*</div>*/}
                   <div className="mt-5 border-t border-gray-200">
                     <dl className="divide-y divide-gray-200">
                       <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -281,14 +273,6 @@ function Index() {
                           <span className="flex-grow">
                             {meData?.getMe?.email}
                           </span>
-                          {/*<span className="ml-4 flex-shrink-0">*/}
-                          {/*  <button*/}
-                          {/*    type="button"*/}
-                          {/*    className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"*/}
-                          {/*  >*/}
-                          {/*    Update*/}
-                          {/*  </button>*/}
-                          {/*</span>*/}
                         </dd>
                       </div>
                       <div className="py-4 sm:grid sm:py-5 sm:grid-cols-3 sm:gap-4">

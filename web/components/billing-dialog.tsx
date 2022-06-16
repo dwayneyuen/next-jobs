@@ -5,7 +5,7 @@ import { PayPalButtons } from "@paypal/react-paypal-js";
 import {
   GetMeDocument,
   GetSubscriptionStatusDocument,
-  useUpdateMeMutation,
+  useSavePaypalSubscriptionMutation,
 } from "graphql/generated";
 
 export default function BillingDialog({
@@ -16,9 +16,10 @@ export default function BillingDialog({
   setOpen: (open: boolean) => void;
 }) {
   const [success, setSuccess] = useState(false);
-  const [updateMe, { loading }] = useUpdateMeMutation({
-    refetchQueries: [GetMeDocument, GetSubscriptionStatusDocument],
-  });
+  const [savePaypalSubscription, { loading }] =
+    useSavePaypalSubscriptionMutation({
+      refetchQueries: [GetMeDocument, GetSubscriptionStatusDocument],
+    });
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog
@@ -85,7 +86,7 @@ export default function BillingDialog({
                           onApprove={async (data) => {
                             if (data.subscriptionID) {
                               setSuccess(true);
-                              await updateMe({
+                              await savePaypalSubscription({
                                 variables: {
                                   paypalPlanId:
                                     process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID!,
