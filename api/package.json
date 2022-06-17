@@ -19,8 +19,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prepare": "husky install"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/apollo": "^10.0.12",
@@ -30,9 +29,10 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^8.2.1",
     "@nestjs/platform-express": "^8.0.0",
-    "@prisma/client": "^3.14.0",
     "apollo-server-express": "^3.7.0",
     "axios": "^0.27.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.13.2",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.0.1",
     "futoin-hkdf": "^1.5.1",
@@ -68,7 +68,6 @@
     "jest": "28.0.3",
     "lint-staged": "^12.4.1",
     "prettier": "^2.6.2",
-    "prisma": "^3.14.0",
     "source-map-support": "^0.5.20",
     "supertest": "^6.1.3",
     "ts-jest": "28.0.1",
@@ -109,7 +108,6 @@
   "homepage": "https://github.com/dwayneyuen/next-jobs-app#readme",
   "lint-staged": {
     "*.{js,ts}": "eslint . --cache --fix",
-    "*.{js,ts,md}": "prettier --write",
-    "*.prisma": "prisma format"
+    "*.{js,ts,md}": "prettier --write"
   }
 }

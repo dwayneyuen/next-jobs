@@ -1,26 +1,30 @@
-type UserModel {
-  accessToken: String!
-  baseUrl: String
-  email: String!
-  id: String!
-  paypalSubscriptionId: String
-  paypalPlanId: String
-  subscriptionStatus: SubscriptionStatus
-}
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
 
-enum SubscriptionStatus {
-  APPROVAL_PENDING
-  APPROVED
-  ACTIVE
-  SUSPENDED
-  CANCELLED
-  EXPIRED
+type Mutation {
+  savePaypalSubscription(paypalPlanId: String!, paypalSubscriptionId: String!): UserModel
 }
 
 type Query {
   getMe: UserModel
 }
 
-type Mutation {
-  savePaypalSubscription(paypalPlanId: String!, paypalSubscriptionId: String!): UserModel
+enum SubscriptionStatus {
+  ACTIVE
+  APPROVAL_PENDING
+  APPROVED
+  CANCELLED
+  EXPIRED
+  SUSPENDED
+}
+
+type UserModel {
+  accessToken: String!
+  baseUrl: String
+  email: String!
+  id: String!
+  paypalPlanId: String
+  paypalSubscriptionId: String
+  subscriptionStatus: SubscriptionStatus
 }
