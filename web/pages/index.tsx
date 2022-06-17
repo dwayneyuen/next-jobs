@@ -4,6 +4,7 @@ import { MenuIcon, XIcon } from "@heroicons/react/outline";
 import { useUser } from "@auth0/nextjs-auth0";
 import BlackButton from "components/black-button";
 import { useRouter } from "next/router";
+import Pricing from "components/pricing";
 
 const navigation = [
   { name: "Product", href: "#" },
@@ -224,6 +225,9 @@ export default function Index() {
             />
           </div>
         </div>
+      </div>
+      <div className={"bg-gray-800"}>
+        <Pricing />
       </div>
       <div className="bg-gray-800">
         <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
