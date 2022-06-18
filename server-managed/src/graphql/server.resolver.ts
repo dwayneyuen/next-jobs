@@ -16,6 +16,7 @@ import { EnvironmentVariables } from "src/environment-variables";
 import { CRON_JOBS_QUEUE, getCronQueueKey, getJobQueueKey } from "src/utils";
 import { CronJobService } from "src/prisma/cron-job.service";
 import { UserService } from "src/prisma/user.service";
+import { MessageQueueService } from "src/prisma/message-queue.service";
 
 export enum Result {
   SUCCESS = "SUCCESS",
@@ -45,7 +46,7 @@ class CreateCronJobDto {
 }
 
 /**
- * Catch-all resolver for the next-jobs server
+ * Catch-all resolver for the managed implementation of the next-jobs server
  */
 @Resolver()
 export class ServerResolver {
@@ -53,6 +54,7 @@ export class ServerResolver {
     private cronJobService: CronJobService,
     private environmentVariables: EnvironmentVariables,
     private httpService: HttpService,
+    private messageQueueService: MessageQueueService,
     private ioRedis: IORedis,
     private userService: UserService,
   ) {
@@ -142,40 +144,26 @@ export class ServerResolver {
    * @param queues
    */
   @Mutation(() => Result)
-  async createJobQueues(
-    @Args("accessToken") _accessToken: string,
+  async createMessageQueues(
+    @Args("accessToken") accessToken: string,
     @Args({ name: "queues", type: () => [CreateQueueDto] })
-    _queues: CreateQueueDto[],
+    queues: CreateQueueDto[],
   ): Promise<Result> {
-    // this.logger.debug(
-    //   `accessToken: ${accessToken}, queues: ${JSON.stringify(queues)}`,
-    // );
-    // // We store all queue names in a redis set, and store a key-value pair
-    // // for each queue name, mapping queue name to queue path
-    // const jobQueueNamesKey = getJobQueueNamesKey(
-    //   this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    // );
-    // const existingQueues = await this.ioRedis.smembers(jobQueueNamesKey);
-    // for (const queue of existingQueues) {
-    //   await this.ioRedis.del(
-    //     getJobQueuePathKey(
-    //       this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    //       queue,
-    //     ),
-    //   );
-    //   await this.ioRedis.srem(jobQueueNamesKey, queue);
-    // }
-    // for (const queue of queues) {
-    //   this.logger.debug(`Adding queue: ${JSON.stringify(queue)}`);
-    //   await this.ioRedis.sadd(jobQueueNamesKey, queue.name);
-    //   await this.ioRedis.set(
-    //     getJobQueuePathKey(
-    //       this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    //       queue.name,
-    //     ),
-    //     queue.path,
-    //   );
-    // }
+    const user = await this.userService.findUnique({ accessToken });
+    if (!user) {
+      return Result.INVALID_TOKEN;
+    }
+    if (user.paypalSubscriptionStatus !== PaypalSubscriptionStatus.ACTIVE) {
+      return Result.INACTIVE_SUBSCRIPTION;
+    }
+    await this.messageQueueService.deleteMany({ userId: user.id });
+    await this.messageQueueService.createMany(
+      queues.map((queue) => ({
+        name: queue.name,
+        path: queue.path,
+        userId: user.id,
+      })),
+    );
     return Result.SUCCESS;
   }
 

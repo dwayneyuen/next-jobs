@@ -6,7 +6,15 @@ import { PrismaService } from "./prisma.service";
 export class MessageQueueService {
   constructor(private prisma: PrismaService) {}
 
-  async messageQueue(
+  async findFirst(
+    messageQueueWhereInput: Prisma.MessageQueueWhereInput,
+  ): Promise<MessageQueue | null> {
+    return await this.prisma.messageQueue.findFirst({
+      where: messageQueueWhereInput,
+    });
+  }
+
+  async findUnique(
     messageQueueWhereUniqueInput: Prisma.MessageQueueWhereUniqueInput,
   ): Promise<MessageQueue | null> {
     return await this.prisma.messageQueue.findUnique({
@@ -14,7 +22,7 @@ export class MessageQueueService {
     });
   }
 
-  async messageQueues(params: {
+  async findMany(params: {
     skip?: number;
     take?: number;
     cursor?: Prisma.MessageQueueWhereUniqueInput;
@@ -31,15 +39,25 @@ export class MessageQueueService {
     });
   }
 
-  async createMessageQueue(
-    data: Prisma.MessageQueueCreateInput,
+  async create(
+    data:
+      | Prisma.MessageQueueCreateInput
+      | Prisma.MessageQueueUncheckedCreateInput,
   ): Promise<MessageQueue> {
     return await this.prisma.messageQueue.create({
       data,
     });
   }
 
-  async updateMessageQueue(params: {
+  async createMany(
+    data: Prisma.Enumerable<Prisma.MessageQueueCreateManyInput>,
+  ): Promise<Prisma.BatchPayload> {
+    return await this.prisma.messageQueue.createMany({
+      data,
+    });
+  }
+
+  async update(params: {
     where: Prisma.MessageQueueWhereUniqueInput;
     data: Prisma.MessageQueueUpdateInput;
   }): Promise<MessageQueue> {
@@ -50,10 +68,18 @@ export class MessageQueueService {
     });
   }
 
-  async deleteMessageQueue(
+  async delete(
     where: Prisma.MessageQueueWhereUniqueInput,
   ): Promise<MessageQueue> {
     return this.prisma.messageQueue.delete({
+      where,
+    });
+  }
+
+  async deleteMany(
+    where: Prisma.MessageQueueWhereInput,
+  ): Promise<Prisma.BatchPayload> {
+    return this.prisma.messageQueue.deleteMany({
       where,
     });
   }

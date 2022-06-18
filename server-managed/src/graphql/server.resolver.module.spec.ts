@@ -12,12 +12,17 @@ import { CronJobService } from "src/prisma/cron-job.service";
 import { RedisModule } from "src/redis.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { CronJobFactory } from "test/factories/cron-job.factory";
-import { CRON_JOBS_QUEUE } from "src/utils";
+import { CRON_JOBS_QUEUE, MESSAGE_QUEUE_QUEUE } from "src/utils";
+import { MessageQueueFactory } from "test/factories/message-queue.factory";
+import { MessageQueueService } from "src/prisma/message-queue.service";
 
 describe("ResolverModule", () => {
   let cronJobFactory: CronJobFactory;
   let cronJobQueue: Queue;
   let cronJobService: CronJobService;
+  let messageQueueQueue: Queue;
+  let messageQueueFactory: MessageQueueFactory;
+  let messageQueueService: MessageQueueService;
   let serverResolver: ServerResolver;
   let userFactory: UserFactory;
 
@@ -34,6 +39,7 @@ describe("ResolverModule", () => {
           useValue: new HttpServiceFake(),
         },
         CronJobFactory,
+        MessageQueueFactory,
         ServerResolver,
         UserFactory,
       ],
@@ -44,13 +50,18 @@ describe("ResolverModule", () => {
       connection: moduleRef.get(IORedis),
     });
     cronJobService = moduleRef.get(CronJobService);
+    messageQueueFactory = moduleRef.get(MessageQueueFactory);
+    messageQueueQueue = new Queue(MESSAGE_QUEUE_QUEUE, {
+      connection: moduleRef.get(IORedis),
+    });
+    messageQueueService = moduleRef.get(MessageQueueService);
     serverResolver = moduleRef.get(ServerResolver);
     userFactory = moduleRef.get(UserFactory);
   });
 
   describe("createCronJob", () => {
     describe("with a valid access token and an active subscription", () => {
-      it("should delete previous jobs, create new cron jobs, and return SUCCESS", async () => {
+      it("should delete previous cron jobs, create new cron jobs, and return SUCCESS", async () => {
         const user = await userFactory.create({
           paypalSubscriptionStatus: PaypalSubscriptionStatus.ACTIVE,
         });
@@ -93,7 +104,7 @@ describe("ResolverModule", () => {
     });
 
     describe("with an invalid access token", () => {
-      it("should not create a job and return INVALID_TOKEN", async () => {
+      it("should return INVALID_TOKEN", async () => {
         const user = await userFactory.create({
           paypalSubscriptionStatus: PaypalSubscriptionStatus.ACTIVE,
         });
@@ -117,7 +128,7 @@ describe("ResolverModule", () => {
     });
 
     describe("with a non-active subscription status", () => {
-      it("should not create a job and return INACTIVE_SUBSCRIPTION", async () => {
+      it("should not create cron jobs and should return INACTIVE_SUBSCRIPTION", async () => {
         const user = await userFactory.create({
           paypalSubscriptionStatus: null,
         });
@@ -138,13 +149,80 @@ describe("ResolverModule", () => {
     });
   });
 
-  // describe("createJobQueues", () => {
-  //   describe("with an invalid access token", () => {
-  //     it("should not create a job queue and return INVALID_TOKEN", async () => {});
-  //   });
-  //
-  //   describe("with a non-active subscription", () => {
-  //     it("should not create a job queue and return INACTIVE_SUBSCRIPTION", async () => {});
-  //   });
-  // });
+  describe("createMessageQueues", () => {
+    describe("with a valid access token and an active subscription", () => {
+      it("should delete previous message queues, create new message queues, and return SUCCESS", async () => {
+        const user = await userFactory.create({
+          paypalSubscriptionStatus: PaypalSubscriptionStatus.ACTIVE,
+        });
+        const previousMessageQueue = await messageQueueFactory.create({
+          userId: user.id,
+        });
+
+        const result = await serverResolver.createMessageQueues(
+          user.accessToken,
+          [
+            {
+              name: "name",
+              path: "path",
+            },
+          ],
+        );
+
+        expect(result).toEqual(Result.SUCCESS);
+
+        expect(
+          await messageQueueService.findUnique({ id: previousMessageQueue.id }),
+        ).toBeNull();
+
+        expect(
+          await messageQueueService.findUnique({
+            name_userId: {
+              name: "name",
+              userId: user.id,
+            },
+          }),
+        ).not.toBeNull();
+      });
+    });
+
+    describe("with an invalid access token", () => {
+      it("should return INVALID_TOKEN", async () => {
+        const result = await serverResolver.createMessageQueues(
+          "wrong-access-token",
+          [
+            {
+              name: "name",
+              path: "path",
+            },
+          ],
+        );
+
+        expect(result).toEqual(Result.INVALID_TOKEN);
+      });
+    });
+
+    describe("with a non-active subscription", () => {
+      it("should not create message queues and should return INACTIVE_SUBSCRIPTION", async () => {
+        const user = await userFactory.create({
+          paypalSubscriptionStatus: null,
+        });
+
+        const result = await serverResolver.createMessageQueues(
+          user.accessToken,
+          [
+            {
+              name: "name",
+              path: "path",
+            },
+          ],
+        );
+
+        expect(
+          await messageQueueService.findFirst({ userId: user.id }),
+        ).toBeNull();
+        expect(result).toEqual(Result.INACTIVE_SUBSCRIPTION);
+      });
+    });
+  });
 });

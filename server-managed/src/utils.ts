@@ -17,6 +17,7 @@ export const getCronQueueKey = (): string => {
 };
 
 export const CRON_JOBS_QUEUE = "cron-jobs";
+export const MESSAGE_QUEUE_QUEUE = "message-queue";
 
 // /**
 //  * The key where we store the names of job queues as a set
