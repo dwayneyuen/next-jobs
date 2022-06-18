@@ -6,7 +6,15 @@ import { PrismaService } from "./prisma.service";
 export class CronJobService {
   constructor(private prisma: PrismaService) {}
 
-  async cronJob(
+  async findFirst(
+    cronJobWhereInput: Prisma.CronJobWhereInput,
+  ): Promise<CronJob | null> {
+    return await this.prisma.cronJob.findFirst({
+      where: cronJobWhereInput,
+    });
+  }
+
+  async findUnique(
     cronJobWhereUniqueInput: Prisma.CronJobWhereUniqueInput,
   ): Promise<CronJob | null> {
     return await this.prisma.cronJob.findUnique({
@@ -14,7 +22,7 @@ export class CronJobService {
     });
   }
 
-  async cronJobs(params: {
+  async findMany(params: {
     skip?: number;
     take?: number;
     cursor?: Prisma.CronJobWhereUniqueInput;
@@ -31,13 +39,15 @@ export class CronJobService {
     });
   }
 
-  async createCronJob(data: Prisma.CronJobCreateInput): Promise<CronJob> {
+  async create(
+    data: Prisma.CronJobCreateInput | Prisma.CronJobUncheckedCreateInput,
+  ): Promise<CronJob> {
     return await this.prisma.cronJob.create({
       data,
     });
   }
 
-  async updateCronJob(params: {
+  async update(params: {
     where: Prisma.CronJobWhereUniqueInput;
     data: Prisma.CronJobUpdateInput;
   }): Promise<CronJob> {
@@ -48,8 +58,16 @@ export class CronJobService {
     });
   }
 
-  async deleteCronJob(where: Prisma.CronJobWhereUniqueInput): Promise<CronJob> {
+  async delete(where: Prisma.CronJobWhereUniqueInput): Promise<CronJob> {
     return this.prisma.cronJob.delete({
+      where,
+    });
+  }
+
+  async deleteMany(
+    where: Prisma.CronJobWhereInput,
+  ): Promise<Prisma.BatchPayload> {
+    return this.prisma.cronJob.deleteMany({
       where,
     });
   }

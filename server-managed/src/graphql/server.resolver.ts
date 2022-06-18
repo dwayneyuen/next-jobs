@@ -11,19 +11,17 @@ import { Logger } from "@nestjs/common";
 import { HttpService } from "@nestjs/axios";
 import IORedis from "ioredis";
 import { Job, Queue, QueueScheduler, Worker } from "bullmq";
+import { PaypalSubscriptionStatus } from "@dwayneyuen/next-cron-prisma";
 import { EnvironmentVariables } from "src/environment-variables";
-import {
-  getCronQueueKey,
-  getJobQueueKey,
-  getJobQueueNamesKey,
-  getJobQueuePathKey,
-} from "src/utils";
+import { CRON_JOBS_QUEUE, getCronQueueKey, getJobQueueKey } from "src/utils";
+import { CronJobService } from "src/prisma/cron-job.service";
+import { UserService } from "src/prisma/user.service";
 
 export enum Result {
-  SUCCESS,
-  INACTIVE_SUBSCRIPTION,
-  INVALID_TOKEN,
-  QUEUE_NOT_FOUND,
+  SUCCESS = "SUCCESS",
+  INACTIVE_SUBSCRIPTION = "INACTIVE_SUBSCRIPTION",
+  INVALID_TOKEN = "INVALID_TOKEN",
+  QUEUE_NOT_FOUND = "QUEUE_NOT_FOUND",
 }
 
 registerEnumType(Result, {
@@ -41,8 +39,6 @@ class CreateQueueDto {
 @InputType()
 class CreateCronJobDto {
   @Field()
-  name: string;
-  @Field()
   path: string;
   @Field()
   schedule: string;
@@ -54,9 +50,11 @@ class CreateCronJobDto {
 @Resolver()
 export class ServerResolver {
   constructor(
+    private cronJobService: CronJobService,
     private environmentVariables: EnvironmentVariables,
     private httpService: HttpService,
     private ioRedis: IORedis,
+    private userService: UserService,
   ) {
     const jobQueueKey = getJobQueueKey();
     const cronQueueKey = getCronQueueKey();
@@ -145,39 +143,39 @@ export class ServerResolver {
    */
   @Mutation(() => Result)
   async createJobQueues(
-    @Args("accessToken") accessToken: string,
+    @Args("accessToken") _accessToken: string,
     @Args({ name: "queues", type: () => [CreateQueueDto] })
-    queues: CreateQueueDto[],
+    _queues: CreateQueueDto[],
   ): Promise<Result> {
-    this.logger.debug(
-      `accessToken: ${accessToken}, queues: ${JSON.stringify(queues)}`,
-    );
-    // We store all queue names in a redis set, and store a key-value pair
-    // for each queue name, mapping queue name to queue path
-    const jobQueueNamesKey = getJobQueueNamesKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    );
-    const existingQueues = await this.ioRedis.smembers(jobQueueNamesKey);
-    for (const queue of existingQueues) {
-      await this.ioRedis.del(
-        getJobQueuePathKey(
-          this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-          queue,
-        ),
-      );
-      await this.ioRedis.srem(jobQueueNamesKey, queue);
-    }
-    for (const queue of queues) {
-      this.logger.debug(`Adding queue: ${JSON.stringify(queue)}`);
-      await this.ioRedis.sadd(jobQueueNamesKey, queue.name);
-      await this.ioRedis.set(
-        getJobQueuePathKey(
-          this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-          queue.name,
-        ),
-        queue.path,
-      );
-    }
+    // this.logger.debug(
+    //   `accessToken: ${accessToken}, queues: ${JSON.stringify(queues)}`,
+    // );
+    // // We store all queue names in a redis set, and store a key-value pair
+    // // for each queue name, mapping queue name to queue path
+    // const jobQueueNamesKey = getJobQueueNamesKey(
+    //   this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+    // );
+    // const existingQueues = await this.ioRedis.smembers(jobQueueNamesKey);
+    // for (const queue of existingQueues) {
+    //   await this.ioRedis.del(
+    //     getJobQueuePathKey(
+    //       this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+    //       queue,
+    //     ),
+    //   );
+    //   await this.ioRedis.srem(jobQueueNamesKey, queue);
+    // }
+    // for (const queue of queues) {
+    //   this.logger.debug(`Adding queue: ${JSON.stringify(queue)}`);
+    //   await this.ioRedis.sadd(jobQueueNamesKey, queue.name);
+    //   await this.ioRedis.set(
+    //     getJobQueuePathKey(
+    //       this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+    //       queue.name,
+    //     ),
+    //     queue.path,
+    //   );
+    // }
     return Result.SUCCESS;
   }
 
@@ -194,31 +192,36 @@ export class ServerResolver {
     @Args({ name: "jobs", type: () => [CreateCronJobDto] })
     jobs: CreateCronJobDto[],
   ): Promise<Result> {
-    this.logger.debug(
-      `accessToken: ${accessToken}, jobs: ${JSON.stringify(jobs)}`,
-    );
-    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
+    const user = await this.userService.findUnique({ accessToken });
+    if (!user) {
       return Result.INVALID_TOKEN;
     }
-    const cronQueueKey = getCronQueueKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    );
-    const scheduledJobsQueue = new Queue(cronQueueKey, {
+    if (user.paypalSubscriptionStatus !== PaypalSubscriptionStatus.ACTIVE) {
+      return Result.INACTIVE_SUBSCRIPTION;
+    }
+    const cronJobsQueue = new Queue(CRON_JOBS_QUEUE, {
       connection: this.ioRedis,
     });
-    const repeatableJobs = await scheduledJobsQueue.getRepeatableJobs();
-    for (const repeatableJob of repeatableJobs) {
-      await scheduledJobsQueue.removeRepeatableByKey(repeatableJob.key);
+    const cronJobs = await this.cronJobService.findMany({
+      where: { userId: user.id },
+    });
+    for (const cronJob of cronJobs) {
+      await cronJobsQueue.remove(cronJob.jobId);
     }
+    await this.cronJobService.deleteMany({
+      userId: user.id,
+    });
     for (const job of jobs) {
-      this.logger.debug(`Adding scheduled job: ${JSON.stringify(job)}`);
-      await scheduledJobsQueue.add(
-        job.name,
-        { path: job.path },
+      const cronJob = await cronJobsQueue.add(
+        `${user.id}-${job.path}`,
+        { path: job.path, userId: user.id },
         { repeat: { cron: job.schedule } },
       );
-      const repeatableJobs = await scheduledJobsQueue.getRepeatableJobs();
-      this.logger.debug(`repeatable jobs: ${repeatableJobs}`);
+      await this.cronJobService.create({
+        jobId: cronJob.id,
+        path: job.path,
+        userId: user.id,
+      });
     }
     return Result.SUCCESS;
   }
@@ -230,33 +233,33 @@ export class ServerResolver {
    */
   @Mutation(() => Result)
   async enqueueJob(
-    @Args("accessToken") accessToken: string,
-    @Args("queueName") queueName: string,
-    @Args("data") data: string,
+    @Args("accessToken") _accessToken: string,
+    @Args("queueName") _queueName: string,
+    @Args("data") _data: string,
   ): Promise<Result> {
-    this.logger.debug(
-      `accessToken: ${accessToken}, queueName: ${queueName}, data: ${data}, accessToken: ${this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN}`,
-    );
-    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
-      return Result.INVALID_TOKEN;
-    }
-    const path = await this.ioRedis.get(
-      getJobQueuePathKey(
-        this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-        queueName,
-      ),
-    );
-    this.logger.debug(`Path for queue name: ${queueName}, path: ${path}`);
-    if (!path) {
-      return Result.QUEUE_NOT_FOUND;
-    }
-    const jobQueueKey = getJobQueueKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    );
-    await new Queue(jobQueueKey, { connection: this.ioRedis }).add(queueName, {
-      data,
-      path,
-    });
+    // this.logger.debug(
+    //   `accessToken: ${accessToken}, queueName: ${queueName}, data: ${data}, accessToken: ${this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN}`,
+    // );
+    // if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
+    //   return Result.INVALID_TOKEN;
+    // }
+    // const path = await this.ioRedis.get(
+    //   getJobQueuePathKey(
+    //     this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+    //     queueName,
+    //   ),
+    // );
+    // this.logger.debug(`Path for queue name: ${queueName}, path: ${path}`);
+    // if (!path) {
+    //   return Result.QUEUE_NOT_FOUND;
+    // }
+    // const jobQueueKey = getJobQueueKey(
+    //   this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+    // );
+    // await new Queue(jobQueueKey, { connection: this.ioRedis }).add(queueName, {
+    //   data,
+    //   path,
+    // });
     return Result.SUCCESS;
   }
 }

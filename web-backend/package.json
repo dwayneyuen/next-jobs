@@ -107,7 +107,7 @@
   },
   "homepage": "https://github.com/dwayneyuen/next-jobs-app#readme",
   "lint-staged": {
-    "*.{js,ts}": "eslint . --cache --fix",
+    "*.{js,ts}": "eslint . --fix",
     "*.{js,ts,md}": "prettier --write"
   }
 }

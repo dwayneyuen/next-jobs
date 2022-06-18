@@ -19,7 +19,7 @@ module.exports = {
   },
   ignorePatterns: [".eslintrc.js", "dist"],
   rules: {
-    "import/order": [2],
+    "import/order": [2, { "newlines-between": "never" }],
     quotes: [1, "double"],
     "@typescript-eslint/interface-name-prefix": "off",
     "@typescript-eslint/explicit-function-return-type": "off",

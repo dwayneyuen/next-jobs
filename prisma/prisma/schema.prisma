@@ -48,10 +48,12 @@ model CronJob {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
+  jobId  String @map("job_id")
   path   String
   userId String @map("user_id") @db.Uuid
   user   User   @relation(fields: [userId], references: [id])
 
+  @@unique([path, userId])
   @@index([userId])
   @@map("cron_job")
 }
@@ -66,6 +68,8 @@ model MessageQueue {
   userId String @map("user_id") @db.Uuid
   user   User   @relation(fields: [userId], references: [id])
 
+  @@unique([name, userId])
+  @@unique([path, userId])
   @@index([name])
   @@index([userId])
   @@map("message_queue")
