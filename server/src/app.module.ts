@@ -4,7 +4,7 @@ import { GraphQLModule } from "@nestjs/graphql";
 import { HttpModule } from "@nestjs/axios";
 import { ResolverModule } from "src/graphql/resolver.module";
 import { ParserService } from "src/parser.service";
-import { IORedisModule } from "src/io-redis.module";
+import { RedisModule } from "src/redis.module";
 import { EnvironmentVariablesModule } from "src/environment-variables.module";
 
 @Module({
@@ -16,7 +16,7 @@ import { EnvironmentVariablesModule } from "src/environment-variables.module";
       sortSchema: true,
     }),
     HttpModule,
-    IORedisModule,
+    RedisModule,
     ResolverModule,
   ],
   controllers: [],

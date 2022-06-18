@@ -20,6 +20,7 @@ import {
   getJobQueueNamesKey,
   getJobQueuePathKey,
 } from "src/utils";
+import { RedisClientType } from "redis";
 
 export enum Result {
   SUCCESS,

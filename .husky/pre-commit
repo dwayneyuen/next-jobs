@@ -4,4 +4,4 @@
 (cd web; npx lint-staged) &&
 (cd api; npx lint-staged) &&
 (cd sdk; npx lint-staged) &&
-(cd cli; npx lint-staged)
+(cd cli; npx lint-staged) || exit
