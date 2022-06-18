@@ -1,7 +1,10 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-(cd web; npx lint-staged) &&
-(cd api; npx lint-staged) &&
+(cd web-frontend; npx lint-staged) &&
+(cd web-backend; npx lint-staged) &&
+(cd prisma; npx prisma format) &&
+(cd server; npx lint-staged) &&
+(cd server-prod; npx lint-staged) &&
 (cd sdk; npx lint-staged) &&
 (cd cli; npx lint-staged) || exit

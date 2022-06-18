@@ -2,7 +2,9 @@
 
 Monorepo for the next-jobs library. Contents:
 
-- cli - NestJS CLI tool for deploying next-jobs
+- cli - CLI tool for deploying next-jobs
 - sdk - Client library published to npm
-- api - NestJS API server for managing jobs
-- web - Next.js client application
+- server - Self-hostable implementation of next-jobs
+- server-prod - Managed implementation of the next-jobs server
+- web-backend - Backend NestJS application supporting the website, webhooks, etc.
+- web-frontend - Frontend Next.js application supporting the website, API docs, etc.
