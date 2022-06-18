@@ -1,11 +1,11 @@
 {
-  "name": "@dwayneyuen/next-jobs-server",
-  "version": "0.0.2",
-  "description": "<p align=\"center\">   <a href=\"http://nestjs.com/\" target=\"blank\"><img src=\"https://nestjs.com/img/logo-small.svg\" width=\"200\" alt=\"Nest Logo\" /></a> </p>",
+  "name": "@dwayneyuen/next-cron-server",
+  "version": "0.0.3",
+  "description": "Open source self-hostable next-cron server",
   "author": "Dwayne Yuen",
   "license": "UNLICENSED",
   "bin": {
-    "next-jobs-server": "dist/src/main.js"
+    "next-cron-server": "dist/src/main.js"
   },
   "scripts": {
     "prebuild": "rimraf dist",
