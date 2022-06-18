@@ -1,0 +1,27 @@
+type Query {
+  foo: String!
+}
+
+type Mutation {
+  createJobQueues(accessToken: String!, queues: [CreateQueueDto!]!): Result!
+  createScheduledJobs(accessToken: String!, jobs: [CreateScheduledJobDto!]!): Result!
+  enqueueJob(accessToken: String!, queueName: String!, data: String!): Result!
+}
+
+enum Result {
+  SUCCESS
+  INVALID_TOKEN
+  NOT_IMPLEMENTED
+  QUEUE_NOT_FOUND
+}
+
+input CreateQueueDto {
+  name: String!
+  path: String!
+}
+
+input CreateScheduledJobDto {
+  name: String!
+  path: String!
+  schedule: String!
+}
