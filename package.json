@@ -32,7 +32,7 @@
   },
   "workspaces": [
     "prisma",
-    "server-prod",
+    "server-managed",
     "web-backend"
   ]
 }
