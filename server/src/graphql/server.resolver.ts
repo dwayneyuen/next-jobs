@@ -13,19 +13,16 @@ import IORedis from "ioredis";
 import { Job, Queue, QueueScheduler, Worker } from "bullmq";
 import { lastValueFrom } from "rxjs";
 import { EnvironmentVariables } from "src/environment-variables";
-import { JOBS, QUEUES } from "src/constants";
 import {
   getCronQueueKey,
   getJobQueueKey,
   getJobQueueNamesKey,
   getJobQueuePathKey,
 } from "src/utils";
-import { RedisClientType } from "redis";
 
 export enum Result {
   SUCCESS,
   INVALID_TOKEN,
-  NOT_IMPLEMENTED,
   QUEUE_NOT_FOUND,
 }
 
@@ -42,7 +39,7 @@ class CreateQueueDto {
 }
 
 @InputType()
-class CreateScheduledJobDto {
+class CreateCronJobDto {
   @Field()
   name: string;
   @Field()
@@ -198,11 +195,11 @@ export class ServerResolver {
    * @param jobs
    */
   @Mutation(() => Result)
-  async createScheduledJobs(
+  async createCronJobs(
     // TODO: Add guard for access token authentication
     @Args("accessToken") accessToken: string,
-    @Args({ name: "jobs", type: () => [CreateScheduledJobDto] })
-    jobs: CreateScheduledJobDto[],
+    @Args({ name: "jobs", type: () => [CreateCronJobDto] })
+    jobs: CreateCronJobDto[],
   ): Promise<Result> {
     this.logger.debug(
       `accessToken: ${accessToken}, jobs: ${JSON.stringify(jobs)}`,

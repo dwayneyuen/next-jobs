@@ -11,7 +11,6 @@ import { Logger } from "@nestjs/common";
 import { HttpService } from "@nestjs/axios";
 import IORedis from "ioredis";
 import { Job, Queue, QueueScheduler, Worker } from "bullmq";
-import { lastValueFrom } from "rxjs";
 import { EnvironmentVariables } from "src/environment-variables";
 import {
   getCronQueueKey,
@@ -22,8 +21,8 @@ import {
 
 export enum Result {
   SUCCESS,
+  INACTIVE_SUBSCRIPTION,
   INVALID_TOKEN,
-  NOT_IMPLEMENTED,
   QUEUE_NOT_FOUND,
 }
 
@@ -40,7 +39,7 @@ class CreateQueueDto {
 }
 
 @InputType()
-class CreateScheduledJobDto {
+class CreateCronJobDto {
   @Field()
   name: string;
   @Field()
@@ -59,12 +58,8 @@ export class ServerResolver {
     private httpService: HttpService,
     private ioRedis: IORedis,
   ) {
-    const jobQueueKey = getJobQueueKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    );
-    const cronQueueKey = getCronQueueKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    );
+    const jobQueueKey = getJobQueueKey();
+    const cronQueueKey = getCronQueueKey();
     this.queueSchedulers.set(
       jobQueueKey,
       new QueueScheduler(jobQueueKey, { connection: this.ioRedis }),
@@ -77,21 +72,21 @@ export class ServerResolver {
       jobQueueKey,
       new Worker(
         jobQueueKey,
-        async (job: Job<{ data: string; path: string }>) => {
+        async (job: Job<{ data: string; path: string; userId: string }>) => {
           this.logger.debug(
             `Processing queue job: ${job.queueName}, data: ${JSON.stringify(
               job.data,
             )}`,
           );
-          await lastValueFrom(
-            this.httpService.post(
-              `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
-              {
-                accessToken: this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-                data: job.data.data,
-              },
-            ),
-          );
+          // await lastValueFrom(
+          //   this.httpService.post(
+          //     `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
+          //     {
+          //       accessToken: this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+          //       data: job.data.data,
+          //     },
+          //   ),
+          // );
         },
         {
           concurrency: this.environmentVariables.NEXT_JOBS_CONCURRENCY_LIMIT,
@@ -109,14 +104,14 @@ export class ServerResolver {
         cronQueueKey,
         async (job: Job<{ path: string }>) => {
           this.logger.debug(`Processing scheduled job: ${JSON.stringify(job)}`);
-          await lastValueFrom(
-            this.httpService.post(
-              `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
-              {
-                accessToken: this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-              },
-            ),
-          );
+          // await lastValueFrom(
+          //   this.httpService.post(
+          //     `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
+          //     {
+          //       accessToken: this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+          //     },
+          //   ),
+          // );
         },
         {
           concurrency: this.environmentVariables.NEXT_JOBS_CONCURRENCY_LIMIT,
@@ -157,9 +152,6 @@ export class ServerResolver {
     this.logger.debug(
       `accessToken: ${accessToken}, queues: ${JSON.stringify(queues)}`,
     );
-    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
-      return Result.INVALID_TOKEN;
-    }
     // We store all queue names in a redis set, and store a key-value pair
     // for each queue name, mapping queue name to queue path
     const jobQueueNamesKey = getJobQueueNamesKey(
@@ -196,11 +188,11 @@ export class ServerResolver {
    * @param jobs
    */
   @Mutation(() => Result)
-  async createScheduledJobs(
+  async createCronJobs(
     // TODO: Add guard for access token authentication
     @Args("accessToken") accessToken: string,
-    @Args({ name: "jobs", type: () => [CreateScheduledJobDto] })
-    jobs: CreateScheduledJobDto[],
+    @Args({ name: "jobs", type: () => [CreateCronJobDto] })
+    jobs: CreateCronJobDto[],
   ): Promise<Result> {
     this.logger.debug(
       `accessToken: ${accessToken}, jobs: ${JSON.stringify(jobs)}`,

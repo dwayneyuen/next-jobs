@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { Prisma, User } from "@dwayneyuen/next-cron-prisma";
 import { PrismaService } from "./prisma.service";
 

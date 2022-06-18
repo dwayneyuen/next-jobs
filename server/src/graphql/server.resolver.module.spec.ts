@@ -9,7 +9,7 @@ import { HttpServiceFake } from "src/http-service.fake";
 
 describe("ResolverModule", () => {
   let jobName: string;
-  let queueName: string;
+  // let queueName: string;
   let serverResolver: ServerResolver;
 
   beforeEach(async () => {
@@ -34,11 +34,11 @@ describe("ResolverModule", () => {
     serverResolver = moduleRef.get(ServerResolver);
   });
 
-  describe("createScheduledJob", () => {
+  describe("createCronJob", () => {
     describe("with an invalid access token", () => {
       it("should not create a job and return invalid-token", async () => {
         jobName = randomUUID();
-        const result = await serverResolver.createScheduledJobs(
+        const result = await serverResolver.createCronJobs(
           "wrong-access-token",
           [
             {
@@ -56,16 +56,13 @@ describe("ResolverModule", () => {
     describe("with a valid access token", () => {
       it("should create a job and return success", async () => {
         jobName = randomUUID();
-        const result = await serverResolver.createScheduledJobs(
-          "access-token",
-          [
-            {
-              name: jobName,
-              path: "path",
-              schedule: "* * * * *",
-            },
-          ],
-        );
+        const result = await serverResolver.createCronJobs("access-token", [
+          {
+            name: jobName,
+            path: "path",
+            schedule: "* * * * *",
+          },
+        ]);
 
         expect(result).toEqual(Result.SUCCESS);
       });

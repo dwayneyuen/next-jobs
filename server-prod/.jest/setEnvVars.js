@@ -1,0 +1,2 @@
+process.env.DATABASE_URL =
+  "postgresql://postgres:mysecretpassword@localhost:5433/postgres";

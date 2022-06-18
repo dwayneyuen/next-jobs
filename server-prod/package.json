@@ -47,6 +47,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@faker-js/faker": "^7.2.0",
     "@nestjs/cli": "^8.0.0",
     "@nestjs/schematics": "^8.0.0",
     "@nestjs/testing": "^8.4.5",
@@ -63,6 +64,7 @@
     "eslint-import-resolver-typescript": "^2.7.1",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "fishery": "^2.2.2",
     "jest": "28.0.3",
     "prettier": "^2.3.2",
     "source-map-support": "^0.5.20",
@@ -83,6 +85,9 @@
       "^src/(.*)$": "<rootDir>/$1"
     },
     "rootDir": "src",
+    "setupFiles": [
+      "<rootDir>/.jest/setEnvVars.js"
+    ],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

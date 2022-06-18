@@ -11,9 +11,6 @@ import { Injectable } from "@nestjs/common";
  */
 @Injectable()
 export class EnvironmentVariables {
-  NEXT_JOBS_ACCESS_TOKEN = process.env.NEXT_JOBS_ACCESS_TOKEN;
-  NEXT_JOBS_BASE_URL =
-    process.env.NEXT_JOBS_BASE_URL ?? "http://localhost:3000";
   NEXT_JOBS_CONCURRENCY_LIMIT = parseInt(
     process.env.NEXT_JOBS_CONCURRENCY_LIMIT ?? "10",
   );

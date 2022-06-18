@@ -24,19 +24,51 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  authzSub                 String? @unique @map("authz_sub")
-  accessToken              String  @unique @map("access_token")
-  baseUrl                  String? @map("base_url")
-  email                    String  @unique
-  emailVerified            Boolean @map("email_verified")
-  jobsRemaining            Int?    @map("jobs_remaining")
-  paypalSubscriptionId     String? @map("paypal_subscription_id")
-  paypalSubscriptionStatus String? @map("paypal_subscription_status")
-  planId                   String? @map("plan_id") @db.Uuid
-  plan                     Plan?   @relation(fields: [planId], references: [id])
+  authzSub                 String?                   @unique @map("authz_sub")
+  accessToken              String                    @unique @map("access_token")
+  baseUrl                  String?                   @map("base_url")
+  email                    String                    @unique
+  emailVerified            Boolean                   @map("email_verified")
+  jobsRemaining            Int?                      @map("jobs_remaining")
+  paypalSubscriptionId     String?                   @map("paypal_subscription_id")
+  paypalSubscriptionStatus PaypalSubscriptionStatus? @map("paypal_subscription_status")
+  planId                   String?                   @map("plan_id") @db.Uuid
+  plan                     Plan?                     @relation(fields: [planId], references: [id])
 
+  CronJob      CronJob[]
+  MessageQueue MessageQueue[]
+
+  @@index([accessToken])
   @@index([authzSub])
   @@map("user")
+}
+
+model CronJob {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  path   String
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("cron_job")
+}
+
+model MessageQueue {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  name   String
+  path   String
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([name])
+  @@index([userId])
+  @@map("message_queue")
 }
 
 model Plan {
