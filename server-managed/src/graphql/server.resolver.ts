@@ -13,15 +13,23 @@ import IORedis from "ioredis";
 import { Job, Queue, QueueScheduler, Worker } from "bullmq";
 import { PaypalSubscriptionStatus } from "@dwayneyuen/next-cron-prisma";
 import { EnvironmentVariables } from "src/environment-variables";
-import { CRON_JOBS_QUEUE, getCronQueueKey, getJobQueueKey } from "src/utils";
+import { CRON_JOBS_QUEUE, MESSAGE_QUEUE_QUEUE } from "src/utils";
 import { CronJobService } from "src/prisma/cron-job.service";
 import { UserService } from "src/prisma/user.service";
 import { MessageQueueService } from "src/prisma/message-queue.service";
+import { PrismaService } from "src/prisma/prisma.service";
 
 export enum Result {
   SUCCESS = "SUCCESS",
   INACTIVE_SUBSCRIPTION = "INACTIVE_SUBSCRIPTION",
   INVALID_TOKEN = "INVALID_TOKEN",
+}
+
+export enum EnqueueMessageResult {
+  SUCCESS = "SUCCESS",
+  INACTIVE_SUBSCRIPTION = "INACTIVE_SUBSCRIPTION",
+  INVALID_TOKEN = "INVALID_TOKEN",
+  NO_JOBS_REMAINING = "NO_JOBS_REMAINING",
   QUEUE_NOT_FOUND = "QUEUE_NOT_FOUND",
 }
 
@@ -55,23 +63,22 @@ export class ServerResolver {
     private environmentVariables: EnvironmentVariables,
     private httpService: HttpService,
     private messageQueueService: MessageQueueService,
+    private prismaService: PrismaService,
     private ioRedis: IORedis,
     private userService: UserService,
   ) {
-    const jobQueueKey = getJobQueueKey();
-    const cronQueueKey = getCronQueueKey();
     this.queueSchedulers.set(
-      jobQueueKey,
-      new QueueScheduler(jobQueueKey, { connection: this.ioRedis }),
+      MESSAGE_QUEUE_QUEUE,
+      new QueueScheduler(MESSAGE_QUEUE_QUEUE, { connection: this.ioRedis }),
     );
     this.queueSchedulers.set(
-      cronQueueKey,
-      new QueueScheduler(cronQueueKey, { connection: this.ioRedis }),
+      CRON_JOBS_QUEUE,
+      new QueueScheduler(CRON_JOBS_QUEUE, { connection: this.ioRedis }),
     );
     this.workers.set(
-      jobQueueKey,
+      MESSAGE_QUEUE_QUEUE,
       new Worker(
-        jobQueueKey,
+        MESSAGE_QUEUE_QUEUE,
         async (job: Job<{ data: string; path: string; userId: string }>) => {
           this.logger.debug(
             `Processing queue job: ${job.queueName}, data: ${JSON.stringify(
@@ -99,9 +106,9 @@ export class ServerResolver {
       ),
     );
     this.workers.set(
-      cronQueueKey,
+      CRON_JOBS_QUEUE,
       new Worker(
-        cronQueueKey,
+        CRON_JOBS_QUEUE,
         async (job: Job<{ path: string }>) => {
           this.logger.debug(`Processing scheduled job: ${JSON.stringify(job)}`);
           // await lastValueFrom(
@@ -211,43 +218,55 @@ export class ServerResolver {
         userId: user.id,
       });
     }
+
     return Result.SUCCESS;
   }
 
   /**
-   * Place a job onto a queue
+   * Place a message onto a message queue
    *
-   * TODO: delays
+   * @param accessToken
+   * @param queueName
+   * @param data A JSON.stringified form of the data to be enqueued
    */
   @Mutation(() => Result)
-  async enqueueJob(
-    @Args("accessToken") _accessToken: string,
-    @Args("queueName") _queueName: string,
-    @Args("data") _data: string,
-  ): Promise<Result> {
-    // this.logger.debug(
-    //   `accessToken: ${accessToken}, queueName: ${queueName}, data: ${data}, accessToken: ${this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN}`,
-    // );
-    // if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
-    //   return Result.INVALID_TOKEN;
-    // }
-    // const path = await this.ioRedis.get(
-    //   getJobQueuePathKey(
-    //     this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    //     queueName,
-    //   ),
-    // );
-    // this.logger.debug(`Path for queue name: ${queueName}, path: ${path}`);
-    // if (!path) {
-    //   return Result.QUEUE_NOT_FOUND;
-    // }
-    // const jobQueueKey = getJobQueueKey(
-    //   this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
-    // );
-    // await new Queue(jobQueueKey, { connection: this.ioRedis }).add(queueName, {
-    //   data,
-    //   path,
-    // });
-    return Result.SUCCESS;
+  async enqueueMessage(
+    @Args("accessToken") accessToken: string,
+    @Args("queueName") queueName: string,
+    @Args("data") data: string,
+  ): Promise<EnqueueMessageResult> {
+    const user = await this.prismaService.user.findUnique({
+      where: { accessToken },
+    });
+    if (!user) {
+      return EnqueueMessageResult.INVALID_TOKEN;
+    }
+    if (user.paypalSubscriptionStatus !== PaypalSubscriptionStatus.ACTIVE) {
+      return EnqueueMessageResult.INACTIVE_SUBSCRIPTION;
+    }
+    if (user.jobsRemaining <= 0) {
+      return EnqueueMessageResult.NO_JOBS_REMAINING;
+    }
+    const messageQueue = await this.prismaService.messageQueue.findUnique({
+      where: {
+        name_userId: {
+          name: queueName,
+          userId: user.id,
+        },
+      },
+    });
+    if (!messageQueue) {
+      return EnqueueMessageResult.QUEUE_NOT_FOUND;
+    }
+    await new Queue(MESSAGE_QUEUE_QUEUE, { connection: this.ioRedis }).add(
+      `${user.id}-${messageQueue.path}`,
+      {
+        baseUrl: user.baseUrl,
+        data,
+        path: messageQueue.path,
+      },
+    );
+
+    return EnqueueMessageResult.SUCCESS;
   }
 }

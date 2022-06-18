@@ -4,7 +4,11 @@ import { PaypalSubscriptionStatus } from "@dwayneyuen/next-cron-prisma";
 import { faker } from "@faker-js/faker";
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
-import { Result, ServerResolver } from "src/graphql/server.resolver";
+import {
+  EnqueueMessageResult,
+  Result,
+  ServerResolver,
+} from "src/graphql/server.resolver";
 import { EnvironmentVariables } from "src/environment-variables";
 import { HttpServiceFake } from "src/http-service.fake";
 import { UserFactory } from "test/factories/user.factory";
@@ -15,6 +19,7 @@ import { CronJobFactory } from "test/factories/cron-job.factory";
 import { CRON_JOBS_QUEUE, MESSAGE_QUEUE_QUEUE } from "src/utils";
 import { MessageQueueFactory } from "test/factories/message-queue.factory";
 import { MessageQueueService } from "src/prisma/message-queue.service";
+import { PrismaService } from "src/prisma/prisma.service";
 
 describe("ResolverModule", () => {
   let cronJobFactory: CronJobFactory;
@@ -23,10 +28,11 @@ describe("ResolverModule", () => {
   let messageQueueQueue: Queue;
   let messageQueueFactory: MessageQueueFactory;
   let messageQueueService: MessageQueueService;
+  let prismaService: PrismaService;
   let serverResolver: ServerResolver;
   let userFactory: UserFactory;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [PrismaModule, RedisModule],
       providers: [
@@ -55,6 +61,7 @@ describe("ResolverModule", () => {
       connection: moduleRef.get(IORedis),
     });
     messageQueueService = moduleRef.get(MessageQueueService);
+    prismaService = moduleRef.get(PrismaService);
     serverResolver = moduleRef.get(ServerResolver);
     userFactory = moduleRef.get(UserFactory);
   });
@@ -222,6 +229,94 @@ describe("ResolverModule", () => {
           await messageQueueService.findFirst({ userId: user.id }),
         ).toBeNull();
         expect(result).toEqual(Result.INACTIVE_SUBSCRIPTION);
+      });
+    });
+  });
+
+  describe("enqueueMessage", () => {
+    describe("with a valid access token, queue name, positive jobs remaining, and active subscription", () => {
+      it("should enqueue a message and return SUCCESS", async () => {
+        const user = await userFactory.create({
+          jobsRemaining: 1,
+          paypalSubscriptionStatus: PaypalSubscriptionStatus.ACTIVE,
+        });
+        const messageQueue = await prismaService.messageQueue.create({
+          data: {
+            name: "queue-name",
+            path: "queue-path",
+            userId: user.id,
+          },
+        });
+
+        const result = await serverResolver.enqueueMessage(
+          user.accessToken,
+          messageQueue.name,
+          "data",
+        );
+
+        expect(result).toEqual(EnqueueMessageResult.SUCCESS);
+      });
+    });
+
+    describe("with an unknown queue name", () => {
+      it("should return QUEUE_NOT_FOUND", async () => {
+        const user = await userFactory.create({
+          jobsRemaining: 1,
+          paypalSubscriptionStatus: PaypalSubscriptionStatus.ACTIVE,
+        });
+
+        const result = await serverResolver.enqueueMessage(
+          user.accessToken,
+          "unknown-queue",
+          "data",
+        );
+
+        expect(result).toEqual(EnqueueMessageResult.QUEUE_NOT_FOUND);
+      });
+    });
+
+    describe("with zero jobs remaining", () => {
+      it("should return NO_JOBS_REMAINING", async () => {
+        const user = await userFactory.create({
+          jobsRemaining: 0,
+          paypalSubscriptionStatus: PaypalSubscriptionStatus.ACTIVE,
+        });
+
+        const result = await serverResolver.enqueueMessage(
+          user.accessToken,
+          "queue-name",
+          "data",
+        );
+
+        expect(result).toEqual(EnqueueMessageResult.NO_JOBS_REMAINING);
+      });
+    });
+
+    describe("with an unknown access token", () => {
+      it("should return INVALID_TOKEN", async () => {
+        const result = await serverResolver.enqueueMessage(
+          "wrong-access-token",
+          "queue-name",
+          "data",
+        );
+
+        expect(result).toEqual(EnqueueMessageResult.INVALID_TOKEN);
+      });
+    });
+
+    describe("with a non-active subscription", () => {
+      it("should not enqueue a message and should return INACTIVE_SUBSCRIPTION", async () => {
+        const user = await userFactory.create({
+          paypalSubscriptionStatus: null,
+        });
+
+        const result = await serverResolver.enqueueMessage(
+          user.accessToken,
+          "queue-name",
+          "data",
+        );
+
+        expect(result).toEqual(EnqueueMessageResult.INACTIVE_SUBSCRIPTION);
       });
     });
   });
