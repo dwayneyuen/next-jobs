@@ -24,8 +24,7 @@
 
 ## Description
 
-The self-hostable server backing the next-jobs library. Uses the
-[Nest](https://github.com/nestjs/nest) framework.
+The self-hostable next-jobs server. Uses the [Nest](https://github.com/nestjs/nest) framework.
 
 ## Installation
 

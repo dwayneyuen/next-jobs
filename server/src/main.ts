@@ -12,13 +12,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const environmentVariables = new EnvironmentVariables();
-  if (environmentVariables.NEXT_JOBS_ACCESS_TOKEN) {
-    const parserService = app.get(ParserService);
-    if (fs.existsSync("pages")) {
-      await parserService.parse("pages");
-    } else if (fs.existsSync("src/pages")) {
-      await parserService.parse("pages");
-    }
+
+  // If run in a directory with a pages or src/pages dir, assume we're running
+  // in a developer environment. Parse the directory for queues and cron jobs.
+  const parserService = app.get(ParserService);
+  if (fs.existsSync("pages")) {
+    await parserService.parse("pages");
+  } else if (fs.existsSync("src/pages")) {
+    await parserService.parse("pages");
   }
 
   await app.listen(environmentVariables.NEXT_JOBS_PORT);
