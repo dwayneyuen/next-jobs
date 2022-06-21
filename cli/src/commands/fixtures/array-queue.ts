@@ -1,7 +1,7 @@
-import { JobQueue } from "@dwayneyuen/next-jobs";
+import { MessageQueue } from "@dwayneyuen/next-cron";
 
 const foo = [
-  JobQueue("array-queue", (job) => {
+  MessageQueue("array-queue", (job) => {
     console.log(job);
   }),
 ];

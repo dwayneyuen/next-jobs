@@ -1,6 +1,6 @@
 {
   "name": "@dwayneyuen/next-jobs-cli",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "<p align=\"center\">   <a href=\"http://nestjs.com/\" target=\"blank\"><img src=\"https://nestjs.com/img/logo-small.svg\" width=\"200\" alt=\"Nest Logo\" /></a> </p>",
   "author": "Dwayne Yuen",
   "license": "UNLICENSED",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.6.5",
-    "@dwayneyuen/next-jobs": "^0.0.4",
+    "@dwayneyuen/next-cron": "^0.0.2",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
     "dotenv": "^16.0.1",

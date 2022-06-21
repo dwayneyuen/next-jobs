@@ -1,7 +1,7 @@
-import { JobQueue } from "@dwayneyuen/next-jobs";
+import { MessageQueue } from "@dwayneyuen/next-cron";
 
 const foo = {
-  QueueExample: JobQueue("object-queue", (job) => {
+  QueueExample: MessageQueue("object-queue", (job) => {
     console.log(job);
   }),
 };

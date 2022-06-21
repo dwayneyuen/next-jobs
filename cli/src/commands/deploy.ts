@@ -1,5 +1,5 @@
 import { dirname, join, parse, relative } from "path";
-import { JobQueue, ScheduledJob } from "@dwayneyuen/next-jobs";
+import { CronJob, MessageQueue } from "@dwayneyuen/next-cron";
 import { Logger } from "@nestjs/common";
 import { Command, CommandRunner } from "nest-commander";
 import { glob } from "glob";
@@ -10,8 +10,8 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 /**
- * Parse the source file and detect when its default export is ScheduledJob,
- * JobQueue, or neither
+ * Parse the source file and detect when its default export is CronJob,
+ * MessageQueue, or neither
  *
  * @param sourceFile
  */
@@ -21,14 +21,14 @@ export const parseFile = (
   | null
   | {
       name: string;
-      type: "JobQueue";
+      type: "MessageQueue";
     }
   | {
       schedule: string;
-      type: "ScheduledJob";
+      type: "CronJob";
     } => {
   let result = null;
-  const scheduledJobDeclarations = new Map<string, string>();
+  const cronJobDeclarations = new Map<string, string>();
   const queueDeclarations = new Map<string, string>();
   ts.forEachChild(sourceFile, (node) => {
     Logger.debug(`node.kind: ${node.kind}`);
@@ -44,15 +44,15 @@ export const parseFile = (
                   ) {
                     if (
                       declaration.initializer.expression.escapedText ===
-                      ScheduledJob.name
+                      CronJob.name
                     ) {
-                      scheduledJobDeclarations.set(
+                      cronJobDeclarations.set(
                         declaration.name.escapedText.toString(),
                         declaration.initializer.arguments[0].text,
                       );
                     } else if (
                       declaration.initializer.expression.escapedText ===
-                      JobQueue.name
+                      MessageQueue.name
                     ) {
                       queueDeclarations.set(
                         declaration.name.escapedText.toString(),
@@ -72,19 +72,17 @@ export const parseFile = (
         if (ts.isIdentifier(node.expression.expression)) {
           if (node.expression.arguments.length > 0) {
             if (ts.isStringLiteral(node.expression.arguments[0])) {
-              if (
-                node.expression.expression.escapedText === ScheduledJob.name
-              ) {
+              if (node.expression.expression.escapedText === CronJob.name) {
                 result = {
-                  type: ScheduledJob.name,
+                  type: CronJob.name,
                   schedule: node.expression.arguments[0].text,
                 };
               } else if (
-                node.expression.expression.escapedText === JobQueue.name
+                node.expression.expression.escapedText === MessageQueue.name
               ) {
                 result = {
-                  type: JobQueue.name,
-                  schedule: node.expression.arguments[0].text,
+                  type: MessageQueue.name,
+                  name: node.expression.arguments[0].text,
                 };
               }
             }
@@ -96,12 +94,12 @@ export const parseFile = (
         if (queueDeclarations.has(exportName)) {
           result = {
             name: queueDeclarations.get(exportName),
-            type: JobQueue.name,
+            type: MessageQueue.name,
           };
-        } else if (scheduledJobDeclarations.has(exportName)) {
+        } else if (cronJobDeclarations.has(exportName)) {
           result = {
-            type: ScheduledJob.name,
-            schedule: scheduledJobDeclarations.get(exportName),
+            type: CronJob.name,
+            schedule: cronJobDeclarations.get(exportName),
           };
         }
       }
@@ -128,8 +126,7 @@ export class DeployCommand implements CommandRunner {
     }
     // TODO: Also support `src/pages` as a fallback
     const baseDirectory = `${passedParams[0]}/pages/api/jobs`;
-    const scheduledJobs: { name: string; path: string; schedule: string }[] =
-      [];
+    const cronJobs: { path: string; schedule: string }[] = [];
     const queues: { name: string; path: string }[] = [];
     const files = glob.sync(`${baseDirectory}/**/*.+(ts|js)`);
     const program = ts.createProgram({
@@ -139,7 +136,7 @@ export class DeployCommand implements CommandRunner {
     for (const file of files) {
       const sourceFile = program.getSourceFile(file);
       const result = parseFile(sourceFile);
-      if (result?.type === "ScheduledJob") {
+      if (result?.type === "CronJob") {
         const name = parse(file).name;
         const schedule = result.schedule;
         const path = join(
@@ -148,10 +145,10 @@ export class DeployCommand implements CommandRunner {
           name,
         );
         Logger.debug(
-          `Found scheduled job: name: ${name}, path: ${path}, schedule: ${schedule}`,
+          `Found scheduled job: path: ${path}, schedule: ${schedule}`,
         );
-        scheduledJobs.push({ name, path, schedule });
-      } else if (result?.type === "JobQueue") {
+        cronJobs.push({ path, schedule });
+      } else if (result?.type === "MessageQueue") {
         const name = parse(file).name;
         const path = join(
           "api/jobs",
@@ -163,36 +160,38 @@ export class DeployCommand implements CommandRunner {
       }
     }
     // TODO: Throw an error if duplicate scheduled job or queue name
-    Logger.debug(`Creating scheduled jobs: ${JSON.stringify(scheduledJobs)}`);
-    if (scheduledJobs.length > 0) {
+    Logger.debug(`Creating scheduled jobs: ${JSON.stringify(cronJobs)}`);
+    if (cronJobs.length > 0) {
+      // TODO: Log the result
       await this.apolloClient.mutate({
         mutation: gql`
-          mutation createScheduledJobs(
+          mutation createCronJobs(
             $accessToken: String!
-            $jobs: [CreateScheduledJobDto!]!
+            $jobs: [CreateCronJobDto!]!
           ) {
-            createScheduledJobs(accessToken: $accessToken, jobs: $jobs)
+            createCronJobs(accessToken: $accessToken, jobs: $jobs)
           }
         `,
         variables: {
-          accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
-          jobs: scheduledJobs,
+          accessToken: process.env.NEXT_CRON_ACCESS_TOKEN,
+          jobs: cronJobs,
         },
       });
     }
     Logger.debug(`Creating queues: ${JSON.stringify(queues)}`);
     if (queues.length > 0) {
+      // TODO: Log the result
       await this.apolloClient.mutate({
         mutation: gql`
-          mutation createJobQueues(
+          mutation createMessageQueues(
             $accessToken: String!
             $queues: [CreateQueueDto!]!
           ) {
-            createJobQueues(accessToken: $accessToken, queues: $queues)
+            createMessageQueues(accessToken: $accessToken, queues: $queues)
           }
         `,
         variables: {
-          accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
+          accessToken: process.env.NEXT_CRON_ACCESS_TOKEN,
           queues,
         },
       });

@@ -1,7 +1,7 @@
-import { JobQueue } from "@dwayneyuen/next-jobs";
+import { MessageQueue } from "@dwayneyuen/next-cron";
 import { NextApiHandler } from "next";
 
-const QueueExample: NextApiHandler = JobQueue("queue", (job) => {
+const QueueExample: NextApiHandler = MessageQueue("queue", (job) => {
   console.log(job);
 });
 
