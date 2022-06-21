@@ -1,4 +1,4 @@
-import JobQueue from "./job-queue";
-import ScheduledJob from "./scheduled-job";
+import MessageQueue from "src/message-queue";
+import CronJob from "src/cron-job";
 
-export { JobQueue, ScheduledJob };
+export { MessageQueue, CronJob };

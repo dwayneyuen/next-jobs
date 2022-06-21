@@ -1,6 +1,6 @@
 {
-  "name": "@dwayneyuen/next-jobs",
-  "version": "0.0.4",
+  "name": "@dwayneyuen/next-cron",
+  "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
   "exports": "./dist/index.js",

@@ -6,16 +6,18 @@ import apolloClient from "./apollo-client";
 
 config();
 
-type JobQueueCallbackType<T> = ((job: T) => Promise<void>) | ((job: T) => void);
+type MessageQueueCallbackType<T> =
+  | ((job: T) => Promise<void>)
+  | ((job: T) => void);
 
 /**
  * Implementation of a message queue
  *
  * Send messages to this API to process the message
  */
-function JobQueue<T extends Record<string, any>>(
+function MessageQueue<T extends Record<string, any>>(
   queueName: string,
-  callback: JobQueueCallbackType<T>
+  callback: MessageQueueCallbackType<T>
 ): { enqueue(job: T): Promise<void> } & NextApiHandler {
   const nextApiHandler = async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method !== "POST") {
@@ -23,7 +25,7 @@ function JobQueue<T extends Record<string, any>>(
       return;
     }
 
-    if (req.body.accessToken === process.env.NEXT_JOBS_ACCESS_TOKEN) {
+    if (req.body.accessToken === process.env.NEXT_CRON_ACCESS_TOKEN) {
       await callback(JSON.parse(req.body.data));
       res.status(200).end();
     } else {
@@ -34,12 +36,12 @@ function JobQueue<T extends Record<string, any>>(
   nextApiHandler.enqueue = async (data: T) => {
     const result = await apolloClient.mutate({
       mutation: gql`
-        mutation enqueueJob(
+        mutation enqueueMessage(
           $accessToken: String!
           $data: String!
           $queueName: String!
         ) {
-          enqueueJob(
+          enqueueMessage(
             accessToken: $accessToken
             data: $data
             queueName: $queueName
@@ -47,15 +49,15 @@ function JobQueue<T extends Record<string, any>>(
         }
       `,
       variables: {
-        accessToken: process.env.NEXT_JOBS_ACCESS_TOKEN,
+        accessToken: process.env.NEXT_CRON_ACCESS_TOKEN,
         data: JSON.stringify(data),
         queueName,
       },
     });
-    logger.debug(`Enqueue job result: ${result.data}`);
+    logger.debug(`Enqueue result: ${result.data}`);
   };
 
   return nextApiHandler;
 }
 
-export default JobQueue;
+export default MessageQueue;
