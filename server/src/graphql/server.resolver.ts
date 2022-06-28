@@ -58,11 +58,12 @@ export class ServerResolver {
     private httpService: HttpService,
     private ioRedis: IORedis,
   ) {
+    // TODO: Replace with constants
     const jobQueueKey = getJobQueueKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+      this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
     );
     const cronQueueKey = getCronQueueKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+      this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
     );
     this.queueSchedulers.set(
       jobQueueKey,
@@ -84,20 +85,20 @@ export class ServerResolver {
           );
           await lastValueFrom(
             this.httpService.post(
-              `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
+              `${this.environmentVariables.NEXT_CRON_BASE_URL}/${job.data.path}`,
               {
-                accessToken: this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+                accessToken: this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
                 data: job.data.data,
               },
             ),
           );
         },
         {
-          concurrency: this.environmentVariables.NEXT_JOBS_CONCURRENCY_LIMIT,
+          concurrency: this.environmentVariables.NEXT_CRON_CONCURRENCY_LIMIT,
           connection: this.ioRedis,
           limiter: {
-            max: this.environmentVariables.NEXT_JOBS_CONCURRENCY_LIMIT,
-            duration: this.environmentVariables.NEXT_JOBS_MAX_JOB_DURATION,
+            max: this.environmentVariables.NEXT_CRON_CONCURRENCY_LIMIT,
+            duration: this.environmentVariables.NEXT_CRON_MAX_JOB_DURATION,
           },
         },
       ),
@@ -110,19 +111,19 @@ export class ServerResolver {
           this.logger.debug(`Processing scheduled job: ${JSON.stringify(job)}`);
           await lastValueFrom(
             this.httpService.post(
-              `${this.environmentVariables.NEXT_JOBS_BASE_URL}/${job.data.path}`,
+              `${this.environmentVariables.NEXT_CRON_BASE_URL}/${job.data.path}`,
               {
-                accessToken: this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+                accessToken: this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
               },
             ),
           );
         },
         {
-          concurrency: this.environmentVariables.NEXT_JOBS_CONCURRENCY_LIMIT,
+          concurrency: this.environmentVariables.NEXT_CRON_CONCURRENCY_LIMIT,
           connection: this.ioRedis,
           limiter: {
-            max: this.environmentVariables.NEXT_JOBS_CONCURRENCY_LIMIT,
-            duration: this.environmentVariables.NEXT_JOBS_MAX_JOB_DURATION,
+            max: this.environmentVariables.NEXT_CRON_CONCURRENCY_LIMIT,
+            duration: this.environmentVariables.NEXT_CRON_MAX_JOB_DURATION,
           },
         },
       ),
@@ -148,7 +149,7 @@ export class ServerResolver {
    * @param queues
    */
   @Mutation(() => Result)
-  async createJobQueues(
+  async createMessageQueues(
     @Args("accessToken") accessToken: string,
     @Args({ name: "queues", type: () => [CreateQueueDto] })
     queues: CreateQueueDto[],
@@ -156,19 +157,19 @@ export class ServerResolver {
     this.logger.debug(
       `accessToken: ${accessToken}, queues: ${JSON.stringify(queues)}`,
     );
-    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
+    if (this.environmentVariables.NEXT_CRON_ACCESS_TOKEN !== accessToken) {
       return Result.INVALID_TOKEN;
     }
     // We store all queue names in a redis set, and store a key-value pair
     // for each queue name, mapping queue name to queue path
     const jobQueueNamesKey = getJobQueueNamesKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+      this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
     );
     const existingQueues = await this.ioRedis.smembers(jobQueueNamesKey);
     for (const queue of existingQueues) {
       await this.ioRedis.del(
         getJobQueuePathKey(
-          this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+          this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
           queue,
         ),
       );
@@ -179,7 +180,7 @@ export class ServerResolver {
       await this.ioRedis.sadd(jobQueueNamesKey, queue.name);
       await this.ioRedis.set(
         getJobQueuePathKey(
-          this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+          this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
           queue.name,
         ),
         queue.path,
@@ -204,11 +205,11 @@ export class ServerResolver {
     this.logger.debug(
       `accessToken: ${accessToken}, jobs: ${JSON.stringify(jobs)}`,
     );
-    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
+    if (this.environmentVariables.NEXT_CRON_ACCESS_TOKEN !== accessToken) {
       return Result.INVALID_TOKEN;
     }
     const cronQueueKey = getCronQueueKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+      this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
     );
     const scheduledJobsQueue = new Queue(cronQueueKey, {
       connection: this.ioRedis,
@@ -242,14 +243,14 @@ export class ServerResolver {
     @Args("data") data: string,
   ): Promise<Result> {
     this.logger.debug(
-      `accessToken: ${accessToken}, queueName: ${queueName}, data: ${data}, accessToken: ${this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN}`,
+      `accessToken: ${accessToken}, queueName: ${queueName}, data: ${data}, accessToken: ${this.environmentVariables.NEXT_CRON_ACCESS_TOKEN}`,
     );
-    if (this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN !== accessToken) {
+    if (this.environmentVariables.NEXT_CRON_ACCESS_TOKEN !== accessToken) {
       return Result.INVALID_TOKEN;
     }
     const path = await this.ioRedis.get(
       getJobQueuePathKey(
-        this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+        this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
         queueName,
       ),
     );
@@ -258,7 +259,7 @@ export class ServerResolver {
       return Result.QUEUE_NOT_FOUND;
     }
     const jobQueueKey = getJobQueueKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+      this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
     );
     await new Queue(jobQueueKey, { connection: this.ioRedis }).add(queueName, {
       data,

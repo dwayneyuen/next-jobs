@@ -156,7 +156,7 @@ export class ParserService {
       `Creating scheduled jobs: ${JSON.stringify(scheduledJobs)}`,
     );
     const scheduledJobsQueue = new Queue(
-      getCronQueueKey(this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN),
+      getCronQueueKey(this.environmentVariables.NEXT_CRON_ACCESS_TOKEN),
       {
         connection: this.ioRedis,
       },
@@ -181,13 +181,13 @@ export class ParserService {
     // We store all queue names in a redis set, and store a key-value pair
     // for each queue name, mapping queue name to queue path
     const jobQueueKey = getJobQueueKey(
-      this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+      this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
     );
     const existingQueues = await this.ioRedis.smembers(jobQueueKey);
     for (const queue of existingQueues) {
       await this.ioRedis.del(
         getJobQueuePathKey(
-          this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+          this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
           queue,
         ),
       );
@@ -199,7 +199,7 @@ export class ParserService {
         await this.ioRedis.sadd(jobQueueKey, queue.name);
         await this.ioRedis.set(
           getJobQueuePathKey(
-            this.environmentVariables.NEXT_JOBS_ACCESS_TOKEN,
+            this.environmentVariables.NEXT_CRON_ACCESS_TOKEN,
             queue.name,
           ),
           queue.path,

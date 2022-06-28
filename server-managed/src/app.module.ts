@@ -3,7 +3,6 @@ import { Module } from "@nestjs/common";
 import { GraphQLModule } from "@nestjs/graphql";
 import { HttpModule } from "@nestjs/axios";
 import { ResolverModule } from "src/graphql/resolver.module";
-import { ParserService } from "src/parser.service";
 import { RedisModule } from "src/redis.module";
 import { EnvironmentVariablesModule } from "src/environment-variables.module";
 
@@ -20,6 +19,6 @@ import { EnvironmentVariablesModule } from "src/environment-variables.module";
     ResolverModule,
   ],
   controllers: [],
-  providers: [ParserService],
+  providers: [],
 })
 export class AppModule {}

@@ -14,7 +14,7 @@ config();
         cache: new InMemoryCache(),
         link: new HttpLink({
           fetch,
-          uri: `${new EnvironmentVariables().NEXT_JOBS_BASE_URL}/graphql`,
+          uri: `${new EnvironmentVariables().NEXT_CRON_BASE_URL}/graphql`,
         }),
       }),
     },

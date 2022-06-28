@@ -1,4 +1,4 @@
-import MessageQueue from "src/message-queue";
-import CronJob from "src/cron-job";
+import CronJob from "./cron-job";
+import MessageQueue from "./message-queue";
 
 export { MessageQueue, CronJob };

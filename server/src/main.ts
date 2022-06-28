@@ -22,7 +22,7 @@ async function bootstrap() {
     await parserService.parse("pages");
   }
 
-  await app.listen(environmentVariables.NEXT_JOBS_PORT);
+  await app.listen(environmentVariables.NEXT_CRON_PORT);
 }
 
 bootstrap();

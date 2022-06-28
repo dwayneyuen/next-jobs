@@ -1,18 +1,18 @@
 type Query {
-  foo: String!
+  jobs: String!
 }
 
 type Mutation {
-  createJobQueues(accessToken: String!, queues: [CreateQueueDto!]!): Result!
-  createScheduledJobs(accessToken: String!, jobs: [CreateScheduledJobDto!]!): Result!
-  enqueueJob(accessToken: String!, queueName: String!, data: String!): Result!
+  obliterate: Boolean!
+  createMessageQueues(accessToken: String!, queues: [CreateQueueDto!]!): Result!
+  createCronJobs(accessToken: String!, jobs: [CreateCronJobDto!]!): CreateCronJobResult!
+  enqueueMessage(accessToken: String!, queueName: String!, data: String!): Result!
 }
 
 enum Result {
   SUCCESS
+  INACTIVE_SUBSCRIPTION
   INVALID_TOKEN
-  NOT_IMPLEMENTED
-  QUEUE_NOT_FOUND
 }
 
 input CreateQueueDto {
@@ -20,8 +20,14 @@ input CreateQueueDto {
   path: String!
 }
 
-input CreateScheduledJobDto {
-  name: String!
+enum CreateCronJobResult {
+  SUCCESS
+  INVALID_CRON_EXPRESSION
+  INACTIVE_SUBSCRIPTION
+  INVALID_TOKEN
+}
+
+input CreateCronJobDto {
   path: String!
   schedule: String!
 }

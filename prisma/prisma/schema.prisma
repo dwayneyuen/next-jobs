@@ -38,6 +38,7 @@ model User {
   CronJob      CronJob[]
   MessageQueue MessageQueue[]
 
+  JobResult JobResult[]
   @@index([accessToken])
   @@index([authzSub])
   @@map("user")
@@ -56,6 +57,33 @@ model CronJob {
   @@unique([path, userId])
   @@index([userId])
   @@map("cron_job")
+}
+
+enum JobResultJobType {
+  CRON_JOB
+  MESSAGE_QUEUE
+}
+
+enum JobResultStatus {
+  SUCCESS
+  FAILURE
+}
+
+model JobResult {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  duration        Int?
+  httpStatus      Int?
+  jobResultStatus JobResultStatus  @map("job_result_status")
+  jobType         JobResultJobType @map("job_type")
+  path            String
+  userId          String           @map("user_id") @db.Uuid
+  user            User             @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("job_result")
 }
 
 model MessageQueue {

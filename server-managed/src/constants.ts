@@ -1,3 +1,2 @@
-export const JOBS = "jobs";
-export const QUEUES = "queues";
-export const WORKERS = "workers";
+export const CRON_JOBS_QUEUE = "cron-jobs";
+export const MESSAGE_QUEUE = "message-queue";

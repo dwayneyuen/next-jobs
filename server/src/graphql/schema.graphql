@@ -3,15 +3,14 @@ type Query {
 }
 
 type Mutation {
-  createJobQueues(accessToken: String!, queues: [CreateQueueDto!]!): Result!
-  createScheduledJobs(accessToken: String!, jobs: [CreateScheduledJobDto!]!): Result!
+  createMessageQueues(accessToken: String!, queues: [CreateQueueDto!]!): Result!
+  createCronJobs(accessToken: String!, jobs: [CreateCronJobDto!]!): Result!
   enqueueJob(accessToken: String!, queueName: String!, data: String!): Result!
 }
 
 enum Result {
   SUCCESS
   INVALID_TOKEN
-  NOT_IMPLEMENTED
   QUEUE_NOT_FOUND
 }
 
@@ -20,7 +19,7 @@ input CreateQueueDto {
   path: String!
 }
 
-input CreateScheduledJobDto {
+input CreateCronJobDto {
   name: String!
   path: String!
   schedule: String!

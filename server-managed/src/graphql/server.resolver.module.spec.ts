@@ -16,16 +16,16 @@ import { CronJobService } from "src/prisma/cron-job.service";
 import { RedisModule } from "src/redis.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { CronJobFactory } from "test/factories/cron-job.factory";
-import { CRON_JOBS_QUEUE, MESSAGE_QUEUE_QUEUE } from "src/utils";
 import { MessageQueueFactory } from "test/factories/message-queue.factory";
 import { MessageQueueService } from "src/prisma/message-queue.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { CRON_JOBS_QUEUE, MESSAGE_QUEUE } from "src/constants";
 
 describe("ResolverModule", () => {
   let cronJobFactory: CronJobFactory;
   let cronJobQueue: Queue;
   let cronJobService: CronJobService;
-  let messageQueueQueue: Queue;
+  let messageQueue: Queue;
   let messageQueueFactory: MessageQueueFactory;
   let messageQueueService: MessageQueueService;
   let prismaService: PrismaService;
@@ -57,7 +57,7 @@ describe("ResolverModule", () => {
     });
     cronJobService = moduleRef.get(CronJobService);
     messageQueueFactory = moduleRef.get(MessageQueueFactory);
-    messageQueueQueue = new Queue(MESSAGE_QUEUE_QUEUE, {
+    messageQueue = new Queue(MESSAGE_QUEUE, {
       connection: moduleRef.get(IORedis),
     });
     messageQueueService = moduleRef.get(MessageQueueService);
@@ -317,6 +317,42 @@ describe("ResolverModule", () => {
         );
 
         expect(result).toEqual(EnqueueMessageResult.INACTIVE_SUBSCRIPTION);
+      });
+    });
+  });
+
+  describe("handleCronJob", () => {
+    describe("with an ACTIVE subscription and jobs remaining", () => {
+      it.skip("should execute job and record success", () => {
+        expect(true).toEqual(false);
+      });
+    });
+    describe("with a non-ACTIVE subscription", () => {
+      it.skip("should not execute job and record failure", () => {
+        expect(true).toEqual(false);
+      });
+    });
+    describe("with no jobs remaining", () => {
+      it.skip("should not execute job and record failure", () => {
+        expect(true).toEqual(false);
+      });
+    });
+  });
+
+  describe("handleMessageQueueJob", () => {
+    describe("with an ACTIVE subscription and jobs remaining", () => {
+      it.skip("should execute job and record success", () => {
+        expect(true).toEqual(false);
+      });
+    });
+    describe("with a non-ACTIVE subscription", () => {
+      it.skip("should not execute job and record failure", () => {
+        expect(true).toEqual(false);
+      });
+    });
+    describe("with no jobs remaining", () => {
+      it.skip("should not execute job and record failure", () => {
+        expect(true).toEqual(false);
       });
     });
   });
