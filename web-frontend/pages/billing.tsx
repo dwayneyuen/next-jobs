@@ -6,12 +6,10 @@ import {
   useGetSubscriptionStatusQuery,
 } from "graphql/generated";
 import BillingDialog from "components/billing-dialog";
-import { useRouter } from "next/router";
 import NavBar from "components/nav-bar";
 
-function Index() {
+function Billing() {
   const { data: meData } = useGetMeQuery();
-  const { push } = useRouter();
   const { data: subscriptionStatusData, loading: subscriptionStatusLoading } =
     useGetSubscriptionStatusQuery();
 
@@ -75,7 +73,7 @@ function Index() {
   return (
     <>
       <div className="min-h-full">
-        <NavBar current={"Settings"} />
+        <NavBar current={"Billing"} />
         <div className="py-10">
           <header>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -143,7 +141,7 @@ function Index() {
                               <button
                                 type="button"
                                 className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                onClick={() => push("/billing")}
+                                onClick={() => setShowBillingDialog(true)}
                               >
                                 Subscribe
                               </button>
@@ -167,4 +165,4 @@ function Index() {
   );
 }
 
-export default withPageAuthRequired(Index);
+export default withPageAuthRequired(Billing);

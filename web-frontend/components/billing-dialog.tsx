@@ -7,6 +7,7 @@ import {
   GetSubscriptionStatusDocument,
   useSavePaypalSubscriptionMutation,
 } from "graphql/generated";
+import { PaymentElement } from "@stripe/react-stripe-js";
 
 export default function BillingDialog({
   open,
@@ -63,9 +64,9 @@ export default function BillingDialog({
                     </Dialog.Title>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
-                        A subscription to nodecron.io costs <b>$20</b> per
-                        month. Your first <b>two weeks are free</b> and can be
-                        cancelled any time.
+                        A subscription to <b>nextcron.io</b> costs <b>$20</b>{" "}
+                        per month. Your first <b>two weeks are free</b> and can
+                        be cancelled any time.
                       </p>
                     </div>
                     <div className="mt-2">
@@ -74,6 +75,9 @@ export default function BillingDialog({
                         none of your billing information.
                       </p>
                     </div>
+                    <form>
+                      <PaymentElement />
+                    </form>
                     {!success && (
                       <div className="mt-4">
                         <PayPalButtons
