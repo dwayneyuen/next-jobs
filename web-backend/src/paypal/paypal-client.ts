@@ -1,5 +1,5 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
-import axios, { AxiosInstance } from "axios";
+import { Inject, Injectable } from "@nestjs/common";
+import { AxiosInstance } from "axios";
 import { stringify } from "qs";
 import { GenerateAccessTokenResponse } from "src/paypal/dto/generate-access-token-response";
 import { GetSubscriptionDetailsResponse } from "src/paypal/dto/get-subscription-details-response";

@@ -4,7 +4,8 @@ import { Module } from "@nestjs/common";
 import { GraphQLModule } from "@nestjs/graphql";
 import { AuthModule } from "./auth/auth.module";
 import { GraphqlModule } from "./graphql/graphql.module";
-import { PaypalController } from "src/controllers/paypal/paypal.controller";
+import { StripeController } from "src/controllers/paypal/stripe.controller";
+import { PrismaModule } from "src/prisma/prisma.module";
 
 @Module({
   imports: [
@@ -19,8 +20,9 @@ import { PaypalController } from "src/controllers/paypal/paypal.controller";
     }),
     AuthModule,
     GraphqlModule,
+    PrismaModule,
   ],
-  controllers: [PaypalController],
+  controllers: [StripeController],
   providers: [],
 })
 export class AppModule {}

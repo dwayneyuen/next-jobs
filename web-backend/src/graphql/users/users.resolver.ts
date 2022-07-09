@@ -15,7 +15,6 @@ import { CurrentSession } from "src/graphql/decorators/current-session";
 import { Auth0Session } from "src/auth/authz-session";
 import { PaypalClient } from "src/paypal/paypal-client";
 import { SubscriptionStatus } from "src/paypal/enums";
-import { PlanService } from "src/prisma/plan.service";
 
 registerEnumType(SubscriptionStatus, { name: "SubscriptionStatus" });
 
@@ -23,7 +22,6 @@ registerEnumType(SubscriptionStatus, { name: "SubscriptionStatus" });
 export class UsersResolver {
   constructor(
     private paypalClient: PaypalClient,
-    private planService: PlanService,
     private userService: UserService,
   ) {}
 

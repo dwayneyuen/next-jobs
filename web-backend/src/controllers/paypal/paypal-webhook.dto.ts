@@ -1,3 +1,0 @@
-class PaypalWebhookDto {
-  id: string;
-}
