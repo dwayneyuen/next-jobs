@@ -1,167 +1,135 @@
-import { useState } from "react";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import {
-  SubscriptionStatus,
   useGetMeQuery,
   useGetSubscriptionStatusQuery,
 } from "graphql/generated";
-import BillingDialog from "components/billing-dialog";
 import NavBar from "components/nav-bar";
+import { CheckIcon } from "@heroicons/react/solid";
+import { useRouter } from "next/router";
 
 function Billing() {
+  const { query } = useRouter();
+  const { success } = query;
   const { data: meData } = useGetMeQuery();
   const { data: subscriptionStatusData, loading: subscriptionStatusLoading } =
     useGetSubscriptionStatusQuery();
 
-  const [showBillingDialog, setShowBillingDialog] = useState(false);
-  let billingStatusText = "";
-  let billingStatusColor = "";
-  let showSubscribeButton = false;
-  const subscriptionStatus = subscriptionStatusData?.getMe?.subscriptionStatus;
-  switch (subscriptionStatus) {
-    case undefined: {
-      if (!subscriptionStatusLoading) {
-        billingStatusText = "NOT ACTIVE";
-        billingStatusColor = "text-gray-500";
-        showSubscribeButton = true;
-      }
-      break;
-    }
-    case null: {
-      if (!subscriptionStatusLoading) {
-        billingStatusText = "NOT ACTIVE";
-        billingStatusColor = "text-gray-500";
-        showSubscribeButton = true;
-      }
-      break;
-    }
-    case SubscriptionStatus.Active: {
-      billingStatusText = "ACTIVE";
-      billingStatusColor = "text-green-500";
-      break;
-    }
-    case SubscriptionStatus.ApprovalPending: {
-      billingStatusText = "PENDING";
-      billingStatusColor = "text-yellow-500";
-      break;
-    }
-    case SubscriptionStatus.Approved: {
-      billingStatusText = "ACTIVE";
-      billingStatusColor = "text-green-500";
-      break;
-    }
-    case SubscriptionStatus.Cancelled: {
-      billingStatusText = "CANCELLED";
-      billingStatusColor = "text-red-500";
-      showSubscribeButton = true;
-      break;
-    }
-    case SubscriptionStatus.Expired: {
-      billingStatusText = "EXPIRED";
-      billingStatusColor = "text-red-500";
-      showSubscribeButton = true;
-      break;
-    }
-    case SubscriptionStatus.Suspended: {
-      billingStatusText = "SUSPENDED";
-      billingStatusColor = "text-red-500";
-      showSubscribeButton = true;
-      break;
-    }
-  }
+  const tiers = [
+    {
+      name: "Hobby",
+      href: "#",
+      priceApiId: "price_1LGY9uBrPowVayStBbzXLrTB",
+      priceMonthly: 20,
+      description: null,
+      includedFeatures: ["Up to 20,000 jobs per month", "2 week free trial"],
+    },
+    {
+      name: "Startup",
+      href: "#",
+      priceApiId: "price_1LGY9uBrPowVaySt6fCjKmbI",
+      priceMonthly: 50,
+      description: null,
+      includedFeatures: ["Up to 500,000 jobs per month", "2 week free trial"],
+    },
+    {
+      name: "Enterprise",
+      href: "#",
+      priceMonthly: null,
+      description:
+        "If you're scheduling more than 500,000 jobs and messages per month, contact us to discuss pricing options",
+      includedFeatures: [],
+    },
+  ];
 
   return (
-    <>
-      <div className="min-h-full">
-        <NavBar current={"Billing"} />
-        <div className="py-10">
-          <header>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h1 className="text-3xl font-bold leading-tight text-gray-900">
-                Settings
-              </h1>
-            </div>
-          </header>
-          <main>
-            <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-              <div className="py-8 sm:px-0">
-                <>
-                  <div className="mt-5 border-t border-gray-200">
-                    <dl className="divide-y divide-gray-200">
-                      <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt className="text-sm font-medium text-gray-500">
-                          Email
-                        </dt>
-                        <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span className="flex-grow">
-                            {meData?.getMe?.email}
-                          </span>
-                        </dd>
-                      </div>
-                      <div className="py-4 sm:grid sm:py-5 sm:grid-cols-3 sm:gap-4">
-                        <dt className="text-sm font-medium text-gray-500">
-                          Access token
-                        </dt>
-                        <dd className="mt-1 flex justify-between text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span className={"bg-slate-200 pl-2 pr-2 rounded"}>
-                            {meData?.getMe?.accessToken}
-                          </span>
-                          <div>
-                            <span className="ml-4 flex-shrink-0">
-                              <button
-                                type="button"
-                                className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                              >
-                                Show / Hide
-                              </button>
-                            </span>
-                            <span className="ml-4 flex-shrink-0">
-                              <button
-                                type="button"
-                                className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                              >
-                                Refresh
-                              </button>
-                            </span>
-                          </div>
-                        </dd>
-                      </div>
-                      <div className="py-4 sm:grid sm:py-5 sm:grid-cols-3 sm:gap-4">
-                        <dt className="text-sm font-medium text-gray-500">
-                          Billing status
-                        </dt>
-                        <dd className="mt-1 flex justify-between text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                          <span
-                            className={`${billingStatusColor} bg-slate-200 pl-2 pr-2 rounded`}
-                          >
-                            {billingStatusText}
-                          </span>
-                          <span className="ml-4 flex-shrink-0">
-                            {showSubscribeButton && (
-                              <button
-                                type="button"
-                                className="bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                onClick={() => setShowBillingDialog(true)}
-                              >
-                                Subscribe
-                              </button>
-                            )}
-                          </span>
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
-                </>
+    <div className="bg-white">
+      <NavBar current={"Billing"} />
+      <div className="max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8">
+        <div className="sm:flex sm:flex-col sm:align-center">
+          <h1 className="text-5xl font-extrabold text-gray-900 sm:text-center">
+            Pricing Plans
+          </h1>
+          <p className="mt-5 text-xl text-gray-500 sm:text-center">
+            Every plan has a free 2-week trial. Start building for free, and
+            cancel anytime.
+          </p>
+          <p className="mt-5 text-xl text-gray-500 sm:text-center">
+            Subscriptions are handled through{" "}
+            <a href={"https://stripe.com/"}>Stripe</a>, we store none of your
+            billing information.
+          </p>
+        </div>
+        <div className="mt-12 space-y-4 sm:mt-16 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6 lg:max-w-4xl lg:mx-auto xl:max-w-none xl:mx-0 xl:grid-cols-3">
+          {tiers.map((tier) => (
+            <div
+              key={tier.name}
+              className="max-w-xs border border-gray-200 rounded-lg shadow-sm divide-y divide-gray-200"
+            >
+              <div className="h-full p-6 flex flex-col justify-between">
+                <div>
+                  <h2 className="text-lg leading-6 font-medium text-gray-900">
+                    {tier.name}
+                  </h2>
+                  {tier.description && (
+                    <p className="mt-4 text-sm text-gray-500">
+                      {tier.description}
+                    </p>
+                  )}
+                  {tier.priceMonthly && (
+                    <p className="mt-8">
+                      <span className="text-4xl font-extrabold text-gray-900">
+                        ${tier.priceMonthly}
+                      </span>{" "}
+                      <span className="text-base font-medium text-gray-500">
+                        /mo
+                      </span>
+                    </p>
+                  )}
+                  <ul role="list" className="mt-6 space-y-4">
+                    {tier.includedFeatures.map((feature) => (
+                      <li key={feature} className="flex space-x-3">
+                        <CheckIcon
+                          className="flex-shrink-0 h-5 w-5 text-green-500"
+                          aria-hidden="true"
+                        />
+                        <span className="text-sm text-gray-500">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <form
+                  action={`${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`}
+                  method={"POST"}
+                >
+                  <button
+                    type="submit"
+                    className="mt-8 block w-full bg-gray-800 border border-gray-800 rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-gray-900"
+                  >
+                    {tier.priceMonthly ? `Buy ${tier.name}` : `Contact us`}
+                  </button>
+                </form>
               </div>
+              {/*<div className="pt-6 pb-8 px-6">*/}
+              {/*  <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase">*/}
+              {/*    What&apos;s included*/}
+              {/*  </h3>*/}
+              {/*  <ul role="list" className="mt-6 space-y-4">*/}
+              {/*    {tier.includedFeatures.map((feature) => (*/}
+              {/*      <li key={feature} className="flex space-x-3">*/}
+              {/*        <CheckIcon*/}
+              {/*          className="flex-shrink-0 h-5 w-5 text-green-500"*/}
+              {/*          aria-hidden="true"*/}
+              {/*        />*/}
+              {/*        <span className="text-sm text-gray-500">{feature}</span>*/}
+              {/*      </li>*/}
+              {/*    ))}*/}
+              {/*  </ul>*/}
+              {/*</div>*/}
             </div>
-            <BillingDialog
-              open={showBillingDialog}
-              setOpen={setShowBillingDialog}
-            />
-          </main>
+          ))}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
