@@ -10,8 +10,11 @@ This is pretty far from complete! Things to do:
 
 ## Stack
 
-The frontends are NextJS and deployed to Vercel and the backends are either NextJS API routes or NestJS deployed to AWS
-EC2.
+All projects use TypeScript
+
+The frontends are NextJS and deployed to Vercel using TailwindCSS (and pre-built components from TailwindUI).
+
+The CLI and backends are NestJS with Prisma ORM on top of Postgres and deployed to AWS EC2.
 
 ## Project layout
 
